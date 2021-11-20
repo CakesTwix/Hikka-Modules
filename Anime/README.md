@@ -2,7 +2,7 @@
 
 | Name                                                         | Description                                           |
 | ------------------------------------------------------------ | ----------------------------------------------------- |
-| [moebooru](https://gitlab.com/CakesTwix/friendly-userbot-modules/-/tree/master/CustomROMs) [ROOT] | Module for obtaining art from the ImageBoard Moebooru |
+| [moebooru](https://gitlab.com/CakesTwix/friendly-userbot-modules/-/tree/master/CustomROMs) | Module for obtaining art from the ImageBoard Moebooru |
 
 ## Commands
 

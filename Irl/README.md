@@ -10,6 +10,8 @@
 | ----------- | -------------------- |
 | .np id      | Нова Пошта [Ukraine] |
 
+
+
 ## QrCode
 
 | Name                                                         | Description                  |
