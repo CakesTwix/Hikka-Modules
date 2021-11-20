@@ -21,7 +21,13 @@ class MoebooruMod(loader.Module):
         """The last posted art"""
         art_data = get(self.url).json()
         await message.delete()
-        await message.client.send_file(message.chat_id, art_data[0]['sample_url'])
+        
+        tags = ''
+        args = utils.get_args(message)
+        if "-t" in args:
+            tags = art_data[0]['tags']
+        
+        await message.client.send_file(message.chat_id, art_data[0]['sample_url'], caption = tags)
         
 
 
