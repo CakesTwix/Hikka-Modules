@@ -17,7 +17,7 @@ class MoebooruMod(loader.Module):
 
     @loader.unrestricted
     @loader.ratelimit
-    async def lastcmd(self, message):
+    async def mlastcmd(self, message):
         """The last posted art"""
         art_data = get(self.url).json()
         await message.delete()
@@ -28,6 +28,19 @@ class MoebooruMod(loader.Module):
             tags = art_data[0]['tags']
         
         await message.client.send_file(message.chat_id, art_data[0]['sample_url'], caption = tags)
-        
+
+    @loader.unrestricted
+    @loader.ratelimit
+    async def mrandomcmd(self, message):
+        """Random posted art"""
+        art_data = get(self.url + "?tags=order:random").json()
+        await message.delete()
+
+        tags = ''
+        args = utils.get_args(message)
+        if "-t" in args:
+            tags = art_data[0]['tags']
+
+        await message.client.send_file(message.chat_id, art_data[0]['sample_url'], caption=tags)
 
 
