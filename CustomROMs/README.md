@@ -1,8 +1,8 @@
 ## CustomRecoveryMod
 
-| Name                                                         | Description                        |
-| ------------------------------------------------------------ | ---------------------------------- |
-| [CustomRecoveryMod](https://gitlab.com/CakesTwix/friendly-userbot-modules/-/tree/master/CustomROMs) | Modules to get the latest recovery |
+| Name                                                         | Description                        | Download                                                     |
+| ------------------------------------------------------------ | ---------------------------------- | ------------------------------------------------------------ |
+| [CustomRecoveryMod](https://gitlab.com/CakesTwix/friendly-userbot-modules/-/blob/master/CustomROMs/CustomRecoveryMod.py) | Modules to get the latest recovery | .dlmod https://gitlab.com/CakesTwix/friendly-userbot-modules/-/raw/master/CustomROMs/CustomRecoveryMod.py |
 
 ## Commands
 
@@ -14,9 +14,9 @@
 
 ## CustomMiscStuff
 
-| ЦЦName                                                       | Description                                    |
-| ------------------------------------------------------------ | ---------------------------------------------- |
-| [CustomMiscStuff](https://gitlab.com/CakesTwix/friendly-userbot-modules/-/tree/master/CustomROMs) | Module for miscellaneous stuff for custom ROMs |
+| Name                                                         | Description                                    | Download                                                     |
+| ------------------------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------ |
+| [CustomMiscStuff](https://gitlab.com/CakesTwix/friendly-userbot-modules/-/blob/master/CustomROMs/CustomMiscStuff.py) | Module for miscellaneous stuff for custom ROMs | .dlmod https://gitlab.com/CakesTwix/friendly-userbot-modules/-/raw/master/CustomROMs/CustomMiscStuff.py |
 
 ## Commands
 
@@ -28,9 +28,9 @@
 
 ## CustomROMsMod
 
-| Name                                                         | Description                                 |
-| ------------------------------------------------------------ | ------------------------------------------- |
-| [CustomROMsMod](https://gitlab.com/CakesTwix/friendly-userbot-modules/-/tree/master/CustomROMs) | Module for receiving the latest ROM updates |
+| Name                                                         | Description                                 | Download                                                     |
+| ------------------------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------ |
+| [CustomROMsMod](https://gitlab.com/CakesTwix/friendly-userbot-modules/-/blob/master/CustomROMs/CustomROMsMod.py) | Module for receiving the latest ROM updates | .dlmod https://gitlab.com/CakesTwix/friendly-userbot-modules/-/raw/master/CustomROMs/CustomROMsMod.py |
 
 ## Commands
 
