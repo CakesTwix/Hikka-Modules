@@ -1,3 +1,5 @@
+# requires: requests
+
 import logging
 from requests import get
 from .. import loader, utils
@@ -19,27 +21,36 @@ class MoebooruMod(loader.Module):
     @loader.ratelimit
     async def mlastcmd(self, message):
         """The last posted art"""
-        art_data = get(self.url).json()
-        await message.delete()
-        
-        tags = ''
         args = utils.get_args(message)
+        await message.delete()
+
+        params = "?tags="
+        if "-sfw" in args:
+            params += " rating:s"
+        art_data = get(self.url + params).json()
+
+        tags = ''
         if "-t" in args:
-            tags = art_data[0]['tags']
-        
-        await message.client.send_file(message.chat_id, art_data[0]['sample_url'], caption = tags)
+            tags = art_data[0]['tags']  
+
+        await message.client.send_file(message.chat_id, art_data[0]['sample_url'], caption=tags)
 
     @loader.unrestricted
     @loader.ratelimit
     async def mrandomcmd(self, message):
         """Random posted art"""
-        art_data = get(self.url + "?tags=order:random").json()
+        
+        args = utils.get_args(message)
         await message.delete()
 
+        params = "?tags=order:random"
+        if "-sfw" in args:
+            params += " rating:s"
+        art_data = get(self.url + params).json()
+
         tags = ''
-        args = utils.get_args(message)
         if "-t" in args:
-            tags = art_data[0]['tags']
+            tags = art_data[0]['tags']  
 
         await message.client.send_file(message.chat_id, art_data[0]['sample_url'], caption=tags)
 

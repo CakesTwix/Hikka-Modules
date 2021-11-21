@@ -9,11 +9,7 @@
 | **Command**   | Description         |
 | ------------- | ------------------- |
 | .mlast        | The last posted art |
+| .mrandom      | Random posted art   |
 | **Arguments** |                     |
 | -t            | Get tags with art   |
-
-| **Command**   | Description       |
-| ------------- | ----------------- |
-| .mrandom      | Random posted art |
-| **Arguments** |                   |
-| -t            | Get tags with art |
+| -sfw          | Save for work :)    |
