@@ -9,6 +9,7 @@
 | **Command**      |                                          |
 | ---------------- | ---------------------------------------- |
 | .twrp [codename] | Getting all TWRP releases for your phone |
+| .shrp [codename] | Getting SHRP release for your phone      |
 
 
 

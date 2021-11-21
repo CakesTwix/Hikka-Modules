@@ -39,5 +39,24 @@ class CustomRomsRecoveryMod(loader.Module):
                 reply += (f"⦁ <a href={dl_link}>{dl_file}</a> - <tt>{size}</tt>\n")
 
                 await utils.answer(message, reply)
+    
+    @loader.unrestricted
+    @loader.ratelimit
+    async def shrpcmd(self, message):
+        """SHRP Devices"""
+
+        args = utils.get_args(message)
+        if args:
+            device = args[0].lower()
+            data = get("https://raw.githubusercontent.com/SHRP-Devices/device_data/master/deviceData.json").json()
+            for item in data[:-1]:
+                if item["codeName"] == device:
+                    releases = f"『 SkyHawk Recovery Project for {item['model']} ({device}): 』\n"
+                    releases += f"👤 by {item['maintainer']} \n"
+                    releases += f"ℹ️ Version : {item['currentVersion']} \n"
+                    releases += f"⬇️ Download <a href={item['latestBuild']}>SourceForge</a> \n"
+                    await utils.answer(message, releases)
+                    return
+            await utils.answer(message, "No device...")
 
 
