@@ -1,3 +1,5 @@
+# requires: qrcode
+
 import logging
 from .. import loader, utils
 import qrcode

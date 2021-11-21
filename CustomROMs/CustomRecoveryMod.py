@@ -1,3 +1,5 @@
+# requires: requests bs4
+
 import logging
 from requests import get
 from bs4 import BeautifulSoup

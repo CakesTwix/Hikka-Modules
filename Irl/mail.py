@@ -1,3 +1,5 @@
+# requires: aiohttp
+
 import logging
 import aiohttp
 from .. import loader, utils

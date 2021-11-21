@@ -1,3 +1,5 @@
+# requires: requests
+
 import logging
 from requests import get
 from .. import loader, utils
