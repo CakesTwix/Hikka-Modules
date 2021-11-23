@@ -22,6 +22,8 @@ class QrCodeMod(loader.Module):
     async def qrcmd(self, message):
         """Create QrCode"""
         reply = await message.get_reply_message()
+        await message.delete()
+        
         text = ""
         if reply:
             text = reply.text
