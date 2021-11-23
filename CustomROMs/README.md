@@ -10,6 +10,7 @@
 | ---------------- | ---------------------------------------- |
 | .twrp [codename] | Getting all TWRP releases for your phone |
 | .shrp [codename] | Getting SHRP release for your phone      |
+| .pbrp [codename] | Getting PBRP release for your phone      |
 
 
 
