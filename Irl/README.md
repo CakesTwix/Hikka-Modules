@@ -12,6 +12,20 @@
 
 
 
+## YouTube
+
+| Name                                                         | Description            | Download                                                     |
+| ------------------------------------------------------------ | ---------------------- | ------------------------------------------------------------ |
+| [youtube](https://gitlab.com/CakesTwix/friendly-userbot-modules/-/blob/master/Irl/YouTube.py) | Download YouTube video | .dlmod https://gitlab.com/CakesTwix/friendly-userbot-modules/-/raw/master/Irl/YouTube.py |
+
+## Commands
+
+| **Command**    |                                                       |
+| -------------- | ----------------------------------------------------- |
+| .yt [mp3] link | [mp3] if need only audio. Download video from youtube |
+
+
+
 ## QrCode
 
 | Name                                                         | Description                  | Download                                                     |
