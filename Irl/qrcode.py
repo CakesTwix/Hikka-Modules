@@ -1,9 +1,12 @@
 # requires: qrcode
 
-import logging
-from .. import loader, utils
-import qrcode
+import asyncio
 import io
+import logging
+
+import qrcode
+
+from .. import loader, utils
 
 logger = logging.getLogger(__name__)
 
@@ -22,16 +25,22 @@ class QrCodeMod(loader.Module):
     async def qrcmd(self, message):
         """Create QrCode"""
         reply = await message.get_reply_message()
-        await message.delete()
         
-        text = ""
-        if reply:
+        if len(message.text) > 3:
+            text = message.text[4:] # .qr_ 
+        elif reply and reply.text != '':
             text = reply.text
-        else:
-            text = message.text[2:]
+        else: 
+            text = None
 
-        img = qrcode.make(text)
-        with io.BytesIO() as output:
-            img.save(output)
-            contents = output.getvalue()
-        await message.client.send_file(message.chat_id, contents, caption = text)
+        if text != None:
+            img = qrcode.make(text)
+            with io.BytesIO() as output:
+                img.save(output)
+                contents = output.getvalue()
+            await message.delete()
+            await message.client.send_file(message.chat_id, contents, caption = text)
+        else:
+            await utils.answer(message, "Pls text")
+            await asyncio.sleep(5)
+            await message.delete()
