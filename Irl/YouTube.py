@@ -21,7 +21,7 @@ from pytube import YouTube
 import os
 from io import BytesIO
 import subprocess
-# requires: pytube PIL
+# requires: pytube Pillow
 
 @loader.tds
 class YouTubeMod(loader.Module):
@@ -41,7 +41,9 @@ class YouTubeMod(loader.Module):
 
     @loader.unrestricted
     async def ytcmd(self, message):
-        """[mp3] <link> - Download video from youtube"""
+        """[mp3, voice] <link> - Download video from youtube
+           mp3 - as audio file
+           voice - as voice .-."""
         args = utils.get_args_raw(message)
         message = await utils.answer(message, self.strings('downloading'))
         try:
@@ -83,12 +85,15 @@ class YouTubeMod(loader.Module):
             im.save(output, 'png')
             contents = output.getvalue()
 
-
+        voice_note = False
         if ext == 'mp3':
             path = convert_video_to_audio_ffmpeg(path)
+        elif ext == 'voice':
+            path = convert_video_to_audio_ffmpeg(path)
+            voice_note = True
 
         await self.client.send_file(message.peer_id, path, supports_streaming=True, 
-                                    caption=filename[5:], thumb=contents)
+                                    caption=filename[5:], thumb=contents, voice_note=voice_note)
         os.remove(path)
         await message.delete()
 
