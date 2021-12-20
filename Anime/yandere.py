@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 @loader.ratelimit
 @loader.tds
 class MoebooruMod(loader.Module):
-    """Module for obtaining art from the ImageBoard Moebooru"""
+    """Module for obtaining art from the ImageBoard yande.re"""
 
-    strings = {"name": "Moebooru",
+    strings = {"name": "Yandere",
                }
     url = 'https://yande.re/post.json'
 
