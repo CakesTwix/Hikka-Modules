@@ -14,20 +14,27 @@ class MoebooruMod(loader.Module):
     """Module for obtaining art from the ImageBoard yande.re"""
 
     strings = {"name": "Yandere",
+               "url": "https://yande.re/post.json",
+               "cfg_login":"Login from yande.re",
+               "cfg_password_hash": "SHA1 hashed password",
                }
-    url = 'https://yande.re/post.json'
+
+    def __init__(self):
+        self.login = loader.ModuleConfig("login", "", lambda m: self.strings("cfg_login", m))
+        self.password_hash = loader.ModuleConfig("password_hash ", "", lambda m: self.strings("cfg_password_hash", m))
+        self.name = self.strings["name"]
 
     @loader.unrestricted
     @loader.ratelimit
-    async def mlastcmd(self, message):
+    async def ylastcmd(self, message):
         """The last posted art"""
         args = utils.get_args(message)
         await message.delete()
 
-        params = "?tags="
+        params = f"?login={self.login}&password_hash={self.password_hash}&tags="
         if "-sfw" in args:
             params += " rating:s"
-        art_data = get(self.url + params).json()
+        art_data = get(self.strings["url"] + params).json()
 
         tags = ''
         if "-t" in args:
@@ -37,16 +44,16 @@ class MoebooruMod(loader.Module):
 
     @loader.unrestricted
     @loader.ratelimit
-    async def mrandomcmd(self, message):
+    async def yrandomcmd(self, message):
         """Random posted art"""
         
         args = utils.get_args(message)
         await message.delete()
 
-        params = "?tags=order:random"
+        params = "?login={self.login}&password_hash={self.password_hash}&tags=order:random"
         if "-sfw" in args:
             params += " rating:s"
-        art_data = get(self.url + params).json()
+        art_data = get(self.strings["url"] + params).json()
 
         tags = ''
         if "-t" in args:
