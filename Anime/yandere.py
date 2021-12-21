@@ -1,7 +1,7 @@
-# requires: requests
+# requires: aiohttp
 
 import logging
-from requests import get
+import aiohttp
 from .. import loader, utils
 
 logger = logging.getLogger(__name__)
@@ -32,15 +32,12 @@ class MoebooruMod(loader.Module):
         await message.delete()
 
         params = f"?login={self.config['yandere_login']}&password_hash={self.config['yandere_password_hash']}&tags="
-        if "-sfw" in args:
-            params += " rating:s"
-        art_data = get(self.strings["url"] + params).json()
+        async with aiohttp.ClientSession() as session:
+                async with session.get(self.strings["url"] + params) as get:
+                    art_data = await get.json()
+                    await session.close()  
 
-        tags = ''
-        if "-t" in args:
-            tags = art_data[0]['tags']  
-
-        await message.client.send_file(message.chat_id, art_data[0]['sample_url'], caption=tags)
+        await message.client.send_file(message.chat_id, art_data[0]['sample_url'])
 
     @loader.unrestricted
     @loader.ratelimit
@@ -51,14 +48,11 @@ class MoebooruMod(loader.Module):
         await message.delete()
 
         params = f"?login={self.config['yandere_login']}&password_hash={self.config['yandere_password_hash']}&tags=order:random"
-        if "-sfw" in args:
-            params += " rating:s"
-        art_data = get(self.strings["url"] + params).json()
+        async with aiohttp.ClientSession() as session:
+                async with session.get(self.strings["url"] + params) as get:
+                    art_data = await get.json()
+                    await session.close()  
 
-        tags = ''
-        if "-t" in args:
-            tags = art_data[0]['tags']  
-
-        await message.client.send_file(message.chat_id, art_data[0]['sample_url'], caption=tags)
+        await message.client.send_file(message.chat_id, art_data[0]['sample_url'])
 
 
