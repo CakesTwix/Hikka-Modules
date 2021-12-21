@@ -23,6 +23,14 @@ class MoebooruMod(loader.Module):
         self.config = loader.ModuleConfig("yandere_login", "None", lambda m: self.strings("cfg_yandere_login", m),
                                           "yandere_password_hash", "None", lambda m: self.strings("cfg_yandere_password_hash", m))
         self.name = self.strings["name"]
+   
+    def string_builder(self, json):
+        string = f"Tags : {json['tags']}\n"
+        string += f"©️ : {json['author'] if json['author'] else 'No author'}\n"
+        string += f"🔗 : {json['source'] if json['source'] else 'No source'}\n\n"
+        string += f"🆔 : <a href=https://yande.re/post/show/{json['id']}>{json['id']}</a>"
+
+        return string
 
     @loader.unrestricted
     @loader.ratelimit
@@ -37,7 +45,7 @@ class MoebooruMod(loader.Module):
                     art_data = await get.json()
                     await session.close()  
 
-        await message.client.send_file(message.chat_id, art_data[0]['sample_url'])
+        await message.client.send_file(message.chat_id, art_data[0]['sample_url'], caption=self.string_builder(art_data[0]))
 
     @loader.unrestricted
     @loader.ratelimit
@@ -53,6 +61,6 @@ class MoebooruMod(loader.Module):
                     art_data = await get.json()
                     await session.close()  
 
-        await message.client.send_file(message.chat_id, art_data[0]['sample_url'])
+        await message.client.send_file(message.chat_id, art_data[0]['sample_url'], caption=self.string_builder(art_data[0]))
 
 
