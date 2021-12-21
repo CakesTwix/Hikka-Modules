@@ -15,13 +15,13 @@ class MoebooruMod(loader.Module):
 
     strings = {"name": "Yandere",
                "url": "https://yande.re/post.json",
-               "cfg_login":"Login from yande.re",
-               "cfg_password_hash": "SHA1 hashed password",
+               "cfg_yandere_login":"Login from yande.re",
+               "cfg_yandere_password_hash": "SHA1 hashed password",
                }
 
     def __init__(self):
-        self.login = loader.ModuleConfig("login", "", lambda m: self.strings("cfg_login", m))
-        self.password_hash = loader.ModuleConfig("password_hash ", "", lambda m: self.strings("cfg_password_hash", m))
+        self.config = loader.ModuleConfig("yandere_login", "None", lambda m: self.strings("cfg_yandere_login", m),
+                                          "yandere_password_hash", "None", lambda m: self.strings("cfg_yandere_password_hash", m))
         self.name = self.strings["name"]
 
     @loader.unrestricted
@@ -31,7 +31,7 @@ class MoebooruMod(loader.Module):
         args = utils.get_args(message)
         await message.delete()
 
-        params = f"?login={self.login}&password_hash={self.password_hash}&tags="
+        params = f"?login={self.config['yandere_login']}&password_hash={self.config['yandere_password_hash']}&tags="
         if "-sfw" in args:
             params += " rating:s"
         art_data = get(self.strings["url"] + params).json()
@@ -50,7 +50,7 @@ class MoebooruMod(loader.Module):
         args = utils.get_args(message)
         await message.delete()
 
-        params = "?login={self.login}&password_hash={self.password_hash}&tags=order:random"
+        params = f"?login={self.config['yandere_login']}&password_hash={self.config['yandere_password_hash']}&tags=order:random"
         if "-sfw" in args:
             params += " rating:s"
         art_data = get(self.strings["url"] + params).json()
