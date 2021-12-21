@@ -1,7 +1,7 @@
 # requires: aiohttp
 
 import logging
-import aiohttp
+import aiohttp, asyncio
 from .. import loader, utils
 
 logger = logging.getLogger(__name__)
@@ -15,6 +15,7 @@ class MoebooruMod(loader.Module):
 
     strings = {"name": "Yandere",
                "url": "https://yande.re/post.json",
+               "vote_url": "https://yande.re/post/vote.json?login={login}&password_hash={password_hash}",
                "cfg_yandere_login":"Login from yande.re",
                "cfg_yandere_password_hash": "SHA1 hashed password",
                }
@@ -47,6 +48,7 @@ class MoebooruMod(loader.Module):
 
         await message.client.send_file(message.chat_id, art_data[0]['sample_url'], caption=self.string_builder(art_data[0]))
 
+
     @loader.unrestricted
     @loader.ratelimit
     async def yrandomcmd(self, message):
@@ -64,3 +66,37 @@ class MoebooruMod(loader.Module):
         await message.client.send_file(message.chat_id, art_data[0]['sample_url'], caption=self.string_builder(art_data[0]))
 
 
+    @loader.unrestricted
+    @loader.ratelimit
+    async def yvotecmd(self, message):
+        """
+        Vote for art
+
+        Bad = -1, None = 0, Good = 1, Great = 2, Favorite = 3
+        """
+        reply = await message.get_reply_message()
+        args = utils.get_args(message)
+        if reply and args:
+            yandere_id = reply.raw_text.split("🆔")[1][2:]
+
+            params = {'id': yandere_id,
+                      'score': args[0]}
+            async with aiohttp.ClientSession() as session:
+                async with session.post(self.strings["vote_url"].format(login=self.config['yandere_login'], 
+                                                                        password_hash=self.config['yandere_password_hash']),
+                                        data=params) as post:
+                    result_code = post.status
+                    await session.close()  
+            if result_code == 200:
+                await utils.answer(message, "OK!")
+            elif result_code == 403:
+                await utils.answer(message, "Login or password incorrect!")
+            else:
+                await utils.answer(message, "ERROR!")
+            await asyncio.sleep(5)
+            await message.delete()
+            return
+
+        await utils.answer(message, "Pls code! Check help Yandere")
+        await asyncio.sleep(5)
+        await message.delete()
