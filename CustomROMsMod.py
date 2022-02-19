@@ -1,22 +1,47 @@
-# requires: requests bs4 aiohttp
+# requires: requests
 
 import logging
-import aiohttp
 from requests import get
-from bs4 import BeautifulSoup
 from .. import loader, utils
 
 logger = logging.getLogger(__name__)
 
+
 @loader.unrestricted
 @loader.ratelimit
 @loader.tds
-class CustomRomsRecoveryMod(loader.Module):
-    """Recovery for custom ROMs"""
+class CustomRomsMod(loader.Module):
+    """Miscellaneous stuff for custom ROMs"""
 
-    strings = {"name": "Recovery",
+    strings = {"name": "ROMs",
                }
+
     twrp_api = "https://dl.twrp.me/"
+
+
+    @loader.unrestricted
+    @loader.ratelimit
+    async def sakuracmd(self, message):
+        """Project Sakura"""
+
+        args = utils.get_args(message)
+        if args:
+            device = args[0].lower()
+            data = get("https://raw.githubusercontent.com/ProjectSakura/OTA/11/devices.json").json()
+            for item in data:
+                if item["codename"] == device:
+                    releases = f"Latest Project Sakura for {item['name']} ({item['codename']}) \n"
+                    releases += f"👤 by {item['maintainer_name']} \n"
+                    releases += f"⬇️ Download (https://projectsakura.xyz/download/#/{item['codename']}) \n"
+                    await utils.answer(message, releases)
+                    return
+            await utils.answer(message, "No device...")
+            await asyncio.sleep(5)
+            await message.delete()
+        else:
+            await utils.answer(message, "Pls codename")
+            await asyncio.sleep(5)
+            await message.delete()
 
     @loader.unrestricted
     @loader.ratelimit
@@ -30,6 +55,8 @@ class CustomRomsRecoveryMod(loader.Module):
             if url.status_code == 404:
                 reply = f"`Couldn't find twrp downloads for {device}!`\n"
                 await utils.answer(message, reply)
+                await asyncio.sleep(5)
+                await message.delete()
                 return
 
             page = BeautifulSoup(url.content, "lxml")
@@ -61,6 +88,8 @@ class CustomRomsRecoveryMod(loader.Module):
                     await utils.answer(message, releases)
                     return
             await utils.answer(message, "No device...")
+            await asyncio.sleep(5)
+            await message.delete()
 
 
     @loader.unrestricted
@@ -78,8 +107,9 @@ class CustomRomsRecoveryMod(loader.Module):
             page = BeautifulSoup(pbrp_page, "lxml")
             status_error = page.find("h1", class_="error-code")
             if status_error is not None:
-                print("No device")
-                return
+                return # No device
+
+
             main_info = page.find_all("h3", class_="elementor-heading-title elementor-size-default")
             download_info = page.find("section", class_="has_eae_slider elementor-section elementor-inner-section elementor-element elementor-element-714ebe14 elementor-section-boxed elementor-section-height-default elementor-section-height-default")
 
@@ -102,3 +132,24 @@ class CustomRomsRecoveryMod(loader.Module):
             releases += f"⬇️ <b>Download</b> : <a href={sourceforge}>SourceForge</a> | <a href={github}>GitHub</a>\n"
 
             await utils.answer(message, releases)
+
+
+    @loader.unrestricted
+    @loader.ratelimit
+    async def magiskcmd(self, message):
+        """Magisk by topjohnwu"""
+        magisk_repo = "https://raw.githubusercontent.com/topjohnwu/magisk-files/"
+        magisk_dict = {
+            "⦁ 𝗦𝘁𝗮𝗯𝗹𝗲": magisk_repo + "master/stable.json",
+            "⦁ 𝗕𝗲𝘁𝗮": magisk_repo + "master/beta.json",
+            "⦁ 𝗖𝗮𝗻𝗮𝗿𝘆": magisk_repo + "master/canary.json",
+        }
+        releases = "<code><i>𝗟𝗮𝘁𝗲𝘀𝘁 𝗠𝗮𝗴𝗶𝘀𝗸 𝗥𝗲𝗹𝗲𝗮𝘀𝗲:</i></code>\n\n"
+        for name, release_url in magisk_dict.items():
+            data = get(release_url).json()
+
+            releases += (
+                f'{name}: <a href={data["magisk"]["link"]}>APK v{data["magisk"]["version"]}</a> | <a href={data["magisk"]["note"]}>Changelog</a>\n'
+            )
+        await utils.answer(message, releases)
+
