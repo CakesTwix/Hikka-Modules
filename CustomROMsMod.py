@@ -14,6 +14,9 @@ class CustomRomsMod(loader.Module):
     """Miscellaneous stuff for custom ROMs"""
 
     strings = {"name": "ROMs",
+               "download": "⬇️ <b>Download<b>",
+               "no_device":"No device.",
+               "no_codename":"Pls codename((",
                }
 
     twrp_api = "https://dl.twrp.me/"
@@ -32,14 +35,14 @@ class CustomRomsMod(loader.Module):
                 if item["codename"] == device:
                     releases = f"Latest Project Sakura for {item['name']} ({item['codename']}) \n"
                     releases += f"👤 by {item['maintainer_name']} \n"
-                    releases += f"⬇️ Download (https://projectsakura.xyz/download/#/{item['codename']}) \n"
+                    releases += f"{self.strings['download']} (https://projectsakura.xyz/download/#/{item['codename']}) \n"
                     await utils.answer(message, releases)
                     return
-            await utils.answer(message, "No device...")
+            await utils.answer(message, f"{self.strings['no_device']}")
             await asyncio.sleep(5)
             await message.delete()
         else:
-            await utils.answer(message, "Pls codename")
+            await utils.answer(message, f"{self.strings['no_codename']}")
             await asyncio.sleep(5)
             await message.delete()
 
@@ -84,10 +87,10 @@ class CustomRomsMod(loader.Module):
                     releases = f"『 SkyHawk Recovery Project for {item['model']} ({device}): 』\n"
                     releases += f"👤 <b>by<b> {item['maintainer']} \n"
                     releases += f"ℹ️ <b>Version<b> : {item['currentVersion']} \n"
-                    releases += f"⬇️ <b>Download<b> : <a href={item['latestBuild']}>SourceForge</a> \n"
+                    releases += f"{self.strings['download']} : <a href={item['latestBuild']}>SourceForge</a> \n"
                     await utils.answer(message, releases)
                     return
-            await utils.answer(message, "No device...")
+            await utils.answer(message, f"{self.strings['no_device']}")
             await asyncio.sleep(5)
             await message.delete()
 
@@ -129,7 +132,7 @@ class CustomRomsMod(loader.Module):
             releases += f"ℹ️ <b>Date</b> : {date} \n"
             releases += f"ℹ️ <b>MD5</b> : {md5} \n"
             releases += f"ℹ️ <b>Size</b> : {file_size} \n"
-            releases += f"⬇️ <b>Download</b> : <a href={sourceforge}>SourceForge</a> | <a href={github}>GitHub</a>\n"
+            releases += f"{self.strings['download']} : <a href={sourceforge}>SourceForge</a> | <a href={github}>GitHub</a>\n"
 
             await utils.answer(message, releases)
 
