@@ -1,4 +1,8 @@
+__version__ = (1, 0, 1)
+
 # requires: aiohttp
+# scope: inline_control
+
 
 import logging
 import aiohttp, asyncio
@@ -16,6 +20,7 @@ class MoebooruMod(loader.Module):
     strings = {"name": "Yandere",
                "url": "https://yande.re/post.json",
                "vote_url": "https://yande.re/post/vote.json?login={login}&password_hash={password_hash}",
+               "vote_text":"Vote for this art. The buttons are only available to me",
                "vote_ok":"OK!",
                "vote_login":"Login or password incorrect.",
                "vote_error":"ERROR, .logs 40 or .logs error",
@@ -27,6 +32,12 @@ class MoebooruMod(loader.Module):
         self.config = loader.ModuleConfig("yandere_login", "None", lambda m: self.strings("cfg_yandere_login", m),
                                           "yandere_password_hash", "None", lambda m: self.strings("cfg_yandere_password_hash", m))
         self.name = self.strings["name"]
+   
+
+    async def client_ready(self, client, db) -> None:
+        self.db = db
+        self.client = client
+
 
     def string_builder(self, json):
         string = f"Tags : {json['tags']}\n"
@@ -47,7 +58,7 @@ class MoebooruMod(loader.Module):
         async with aiohttp.ClientSession() as session:
                 async with session.get(self.strings["url"] + params) as get:
                     art_data = await get.json()
-                    await session.close()
+                    await session.close()  
 
         await message.client.send_file(message.chat_id, art_data[0]['sample_url'], caption=self.string_builder(art_data[0]))
 
@@ -56,7 +67,7 @@ class MoebooruMod(loader.Module):
     @loader.ratelimit
     async def yrandomcmd(self, message):
         """Random posted art"""
-
+        
         args = utils.get_args(message)
         await message.delete()
 
@@ -64,14 +75,13 @@ class MoebooruMod(loader.Module):
         async with aiohttp.ClientSession() as session:
                 async with session.get(self.strings["url"] + params) as get:
                     art_data = await get.json()
-                    await session.close()
+                    await session.close()  
 
         await message.client.send_file(message.chat_id, art_data[0]['sample_url'], caption=self.string_builder(art_data[0]))
-
-
+        
     @loader.unrestricted
     @loader.ratelimit
-    async def yvotecmd(self, message):
+    async def yvotecmd(self, message) -> None:
         """
         Vote for art
 
@@ -85,11 +95,11 @@ class MoebooruMod(loader.Module):
             params = {'id': yandere_id,
                       'score': args[0]}
             async with aiohttp.ClientSession() as session:
-                async with session.post(self.strings["vote_url"].format(login=self.config['yandere_login'],
+                async with session.post(self.strings["vote_url"].format(login=self.config['yandere_login'], 
                                                                         password_hash=self.config['yandere_password_hash']),
                                         data=params) as post:
                     result_code = post.status
-                    await session.close()
+                    await session.close()  
             if result_code == 200:
                 await utils.answer(message, self.strings('vote_ok'))
             elif result_code == 403:
@@ -99,7 +109,59 @@ class MoebooruMod(loader.Module):
             await asyncio.sleep(5)
             await message.delete()
             return
+        else:
+            yandere_id = reply.raw_text.split("🆔")[1][2:]
+            kb = [
+            [{
+                'text': 'Bad',
+                'callback': self.vote,
+                'args': [-1, yandere_id]
+            }],
+            [{
+                'text': 'Good',
+                'callback': self.vote,
+                'args': [1, yandere_id]
+            }],
+            [{
+                'text': 'Great',
+                'callback': self.vote,
+                'args': [2, yandere_id]
+            }],
+            [{
+                'text': 'Favorite',
+                'callback': self.vote,
+                'args': [3, yandere_id]
+            }]
+            ]
+            await self.inline.form(self.strings["vote_text"], message=message, reply_markup=kb, always_allow=loader.dispatcher.security._owner)
 
         await utils.answer(message, "Pls code! Check help Yandere")
         await asyncio.sleep(5)
         await message.delete()
+
+    async def vote(self, call, score, _id) -> None:
+        params = {'id': _id, 'score': score}
+        async with aiohttp.ClientSession() as session:
+            async with session.post(self.strings["vote_url"].format(login=self.config['yandere_login'], 
+                                    password_hash=self.config['yandere_password_hash']),
+                                    data=params) as post:
+                result_code = post.status
+                await session.close()
+        kb = [[{
+            'text': '🚫 Close',
+            'callback': self.inline__close
+        }]]
+
+        if result_code == 200:
+            await call.edit(self.strings('vote_ok'), reply_markup=kb)
+        elif result_code == 403:
+            await call.edit(self.strings('vote_login'), reply_markup=kb)
+        else:
+            await call.edit(self.strings('vote_error'), reply_markup=kb)
+
+        
+
+
+    async def inline__close(self, call: "aiogram.types.CallbackQuery") -> None:
+        await call.delete()
+
