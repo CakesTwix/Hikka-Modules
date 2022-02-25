@@ -109,7 +109,7 @@ class MoebooruMod(loader.Module):
             await asyncio.sleep(5)
             await message.delete()
             return
-        else:
+        elif reply:
             yandere_id = reply.raw_text.split("🆔")[1][2:]
             kb = [
             [{
@@ -134,6 +134,7 @@ class MoebooruMod(loader.Module):
             }]
             ]
             await self.inline.form(self.strings["vote_text"], message=message, reply_markup=kb, always_allow=loader.dispatcher.security._owner)
+            return
 
         await utils.answer(message, "Pls code! Check help Yandere")
         await asyncio.sleep(5)
