@@ -3,6 +3,7 @@
 import logging
 from requests import get
 from .. import loader, utils
+import asyncio
 
 logger = logging.getLogger(__name__)
 
