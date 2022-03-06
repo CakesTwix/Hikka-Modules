@@ -17,20 +17,21 @@ logger = logging.getLogger(__name__)
 class QrCodeMod(loader.Module):
     """Module for creating Qr codes"""
 
-    strings = {"name": "QrCode",
-               }
+    strings = {
+        "name": "QrCode",
+    }
 
     @loader.unrestricted
     @loader.ratelimit
     async def qrcmd(self, message):
         """Create QrCode"""
         reply = await message.get_reply_message()
-        
+
         if len(message.text) > 3:
-            text = message.text[4:] # .qr_ 
-        elif reply and reply.text != '':
+            text = message.text[4:]  # .qr_
+        elif reply and reply.text != "":
             text = reply.text
-        else: 
+        else:
             text = None
 
         if text != None:
@@ -39,7 +40,7 @@ class QrCodeMod(loader.Module):
                 img.save(output)
                 contents = output.getvalue()
             await message.delete()
-            await message.client.send_file(message.chat_id, contents, caption = text)
+            await message.client.send_file(message.chat_id, contents, caption=text)
         else:
             await utils.answer(message, "Pls text")
             await asyncio.sleep(5)

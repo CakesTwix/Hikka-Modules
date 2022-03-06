@@ -13,8 +13,9 @@ logger = logging.getLogger(__name__)
 class CustomRomsMiscMod(loader.Module):
     """Module for determining the location of parcels via the mail API"""
 
-    strings = {"name": "Mail",
-               }
+    strings = {
+        "name": "Mail",
+    }
 
     @loader.unrestricted
     @loader.ratelimit
@@ -29,31 +30,26 @@ class CustomRomsMiscMod(loader.Module):
                 "modelName": "TrackingDocument",
                 "calledMethod": "getStatusDocuments",
                 "methodProperties": {
-                    "Documents": [
-                        {
-                            "DocumentNumber": document_number,
-                            "Phone": ""
-                        }
-                    ]
-                }
-
+                    "Documents": [{"DocumentNumber": document_number, "Phone": ""}]
+                },
             }
 
             async with aiohttp.ClientSession() as session:
-                async with session.get("https://api.novaposhta.ua/v2.0/json/", json=data) as get:
+                async with session.get(
+                    "https://api.novaposhta.ua/v2.0/json/", json=data
+                ) as get:
                     answer = await get.json()
                     await session.close()
-            item = answer['data'][0]
+            item = answer["data"][0]
 
             caption = f"Экспресс-накладная: {item['Number']}"
             caption += f"\nСтатус: {item['Status']}"
-            if 'DateCreated' in item:
+            if "DateCreated" in item:
                 caption += f"\nБыло создано: {item['DateCreated']}"
                 caption += f"\nОжид. дата доставки: {item['ScheduledDeliveryDate']}"
                 caption += f"\n{item['CitySender']} -> {item['CityRecipient']}"
 
-            if item.get('DocumentCost') is not None:
+            if item.get("DocumentCost") is not None:
                 caption += f"\nЦена доставки: {item['DocumentCost']} грн."
 
             await utils.answer(message, caption)
-

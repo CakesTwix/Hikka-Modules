@@ -13,14 +13,14 @@ logger = logging.getLogger(__name__)
 class CustomRomsMod(loader.Module):
     """Miscellaneous stuff for custom ROMs"""
 
-    strings = {"name": "ROMs",
-               "download": "⬇️ <b>Download<b>",
-               "no_device":"No device.",
-               "no_codename":"Pls codename((",
-               }
+    strings = {
+        "name": "ROMs",
+        "download": "⬇️ <b>Download<b>",
+        "no_device": "No device.",
+        "no_codename": "Pls codename((",
+    }
 
     twrp_api = "https://dl.twrp.me/"
-
 
     @loader.unrestricted
     @loader.ratelimit
@@ -30,7 +30,9 @@ class CustomRomsMod(loader.Module):
         args = utils.get_args(message)
         if args:
             device = args[0].lower()
-            data = get("https://raw.githubusercontent.com/ProjectSakura/OTA/11/devices.json").json()
+            data = get(
+                "https://raw.githubusercontent.com/ProjectSakura/OTA/11/devices.json"
+            ).json()
             for item in data:
                 if item["codename"] == device:
                     releases = f"Latest Project Sakura for {item['name']} ({item['codename']}) \n"
@@ -54,7 +56,7 @@ class CustomRomsMod(loader.Module):
         if args:
             device = args[0].lower()
             url = get(f"{self.twrp_api}{device}/")
-            
+
             if url.status_code == 404:
                 reply = f"`Couldn't find twrp downloads for {device}!`\n"
                 await utils.answer(message, reply)
@@ -67,12 +69,12 @@ class CustomRomsMod(loader.Module):
             reply = f"『 Team Win Recovery Project for {device}: 』\n"
             for item in download:
                 dl_link = f"{self.twrp_api}{item.find('a')['href']}"
-                dl_file = item.find('td').text
+                dl_file = item.find("td").text
                 size = item.find("span", {"class": "filesize"}).text
-                reply += (f"⦁ <a href={dl_link}>{dl_file}</a> - <tt>{size}</tt>\n")
+                reply += f"⦁ <a href={dl_link}>{dl_file}</a> - <tt>{size}</tt>\n"
 
                 await utils.answer(message, reply)
-    
+
     @loader.unrestricted
     @loader.ratelimit
     async def shrpcmd(self, message):
@@ -81,7 +83,9 @@ class CustomRomsMod(loader.Module):
         args = utils.get_args(message)
         if args:
             device = args[0].lower()
-            data = get("https://raw.githubusercontent.com/SHRP-Devices/device_data/master/deviceData.json").json()
+            data = get(
+                "https://raw.githubusercontent.com/SHRP-Devices/device_data/master/deviceData.json"
+            ).json()
             for item in data[:-1]:
                 if item["codeName"] == device:
                     releases = f"『 SkyHawk Recovery Project for {item['model']} ({device}): 』\n"
@@ -94,7 +98,6 @@ class CustomRomsMod(loader.Module):
             await asyncio.sleep(5)
             await message.delete()
 
-
     @loader.unrestricted
     @loader.ratelimit
     async def pbrpcmd(self, message):
@@ -103,27 +106,41 @@ class CustomRomsMod(loader.Module):
         if args:
             device = args[0].lower()
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"https://pitchblackrecovery.com/{device}/") as get:
+                async with session.get(
+                    f"https://pitchblackrecovery.com/{device}/"
+                ) as get:
                     pbrp_page = await get.text()
                     await session.close()
-    
+
             page = BeautifulSoup(pbrp_page, "lxml")
             status_error = page.find("h1", class_="error-code")
             if status_error is not None:
-                return # No device
+                return  # No device
 
-
-            main_info = page.find_all("h3", class_="elementor-heading-title elementor-size-default")
-            download_info = page.find("section", class_="has_eae_slider elementor-section elementor-inner-section elementor-element elementor-element-714ebe14 elementor-section-boxed elementor-section-height-default elementor-section-height-default")
+            main_info = page.find_all(
+                "h3", class_="elementor-heading-title elementor-size-default"
+            )
+            download_info = page.find(
+                "section",
+                class_="has_eae_slider elementor-section elementor-inner-section elementor-element elementor-element-714ebe14 elementor-section-boxed elementor-section-height-default elementor-section-height-default",
+            )
 
             version = main_info[0].text
             date = main_info[2].text
             status = main_info[4].text
             maintainer = main_info[6].text
-            file_size = download_info.find_all("div", class_="elementor-text-editor elementor-clearfix")[1].text[10:]
-            md5 = download_info.find_all("div", class_="elementor-text-editor elementor-clearfix")[2].text[4:]
-            sourceforge = download_info.find_all("a", class_="elementor-button-link elementor-button elementor-size-md")[0]['href']
-            github = download_info.find_all("a", class_="elementor-button-link elementor-button elementor-size-md")[1]['href']
+            file_size = download_info.find_all(
+                "div", class_="elementor-text-editor elementor-clearfix"
+            )[1].text[10:]
+            md5 = download_info.find_all(
+                "div", class_="elementor-text-editor elementor-clearfix"
+            )[2].text[4:]
+            sourceforge = download_info.find_all(
+                "a", class_="elementor-button-link elementor-button elementor-size-md"
+            )[0]["href"]
+            github = download_info.find_all(
+                "a", class_="elementor-button-link elementor-button elementor-size-md"
+            )[1]["href"]
 
             releases = f"『 Pitch Black Recovery Project for ({device}): 』\n"
             releases += f"👤 <b>by</b> {maintainer} \n"
@@ -135,7 +152,6 @@ class CustomRomsMod(loader.Module):
             releases += f"{self.strings['download']} : <a href={sourceforge}>SourceForge</a> | <a href={github}>GitHub</a>\n"
 
             await utils.answer(message, releases)
-
 
     @loader.unrestricted
     @loader.ratelimit
@@ -151,8 +167,5 @@ class CustomRomsMod(loader.Module):
         for name, release_url in magisk_dict.items():
             data = get(release_url).json()
 
-            releases += (
-                f'{name}: <a href={data["magisk"]["link"]}>APK v{data["magisk"]["version"]}</a> | <a href={data["magisk"]["note"]}>Changelog</a>\n'
-            )
+            releases += f'{name}: <a href={data["magisk"]["link"]}>APK v{data["magisk"]["version"]}</a> | <a href={data["magisk"]["note"]}>Changelog</a>\n'
         await utils.answer(message, releases)
-
