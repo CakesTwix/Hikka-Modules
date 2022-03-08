@@ -8,8 +8,8 @@
 
 | **Command**                   | Description          |                                                              |
 | ----------------------------- | -------------------- | ------------------------------------------------------------ |
-| .ylast                        | The last posted art  |                                                              |
-| .yrandom                      | Random posted art    |                                                              |
+| .ylast (has Inline mode)      | The last posted art  |                                                              |
+| .yrandom (has Inline mode)    | Random posted art    |                                                              |
 | .yvote [reply [-1, 1, 2, 3] ] | Voting for art.      |                                                              |
 | **Config**                    |                      | **Set**                                                      |
 | yandere_login                 | Login from yande.re  | .eval next(filter(lambda x: "Yandere" == x.strings["name"], self.allmodules.modules)).config["yandere_login"] = "Your nickname" |

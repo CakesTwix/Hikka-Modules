@@ -1,12 +1,16 @@
-__version__ = (1, 0, 1)
+__version__ = (1, 1, 0)
 
 # requires: aiohttp
 # scope: inline_control
 
 
 import logging
-import aiohttp, asyncio
-from .. import loader, utils
+import aiohttp
+import asyncio
+from .. import loader, main, utils
+from ..inline import GeekInlineQuery, rand
+from aiogram.types import InlineQueryResultPhoto
+from aiogram.utils.markdown import quote_html
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +48,15 @@ class MoebooruMod(loader.Module):
         self.db = db
         self.client = client
 
+        if main.__version__ < (3, 1, 14):
+            raise Exception("GeekTG Update Required!")
+
     def string_builder(self, json):
-        string = f"Tags : {json['tags']}\n"
-        string += f"©️ : {json['author'] if json['author'] else 'No author'}\n"
-        string += f"🔗 : {json['source'] if json['source'] else 'No source'}\n\n"
-        string += (
-            f"🆔 : <a href=https://yande.re/post/show/{json['id']}>{json['id']}</a>"
-        )
+        string = f"Tags : {quote_html(json['tags'])}\n"
+        string += f"©️ : {quote_html(json['author']) if json['author'] else 'No author'}\n"
+        string += f"🔗 : {quote_html(json['source']) if json['source'] else 'No source'}\n\n"
+        string += f"🆔 : https://yande.re/post/show/{json['id']}"
+
 
         return string
 
@@ -58,12 +64,10 @@ class MoebooruMod(loader.Module):
     @loader.ratelimit
     async def ylastcmd(self, message):
         """The last posted art"""
-        args = utils.get_args(message)
         await message.delete()
 
-        params = f"?login={self.config['yandere_login']}&password_hash={self.config['yandere_password_hash']}&tags="
         async with aiohttp.ClientSession() as session:
-            async with session.get(self.strings["url"] + params) as get:
+            async with session.get(self.strings["url"]) as get:
                 art_data = await get.json()
                 await session.close()
 
@@ -76,12 +80,10 @@ class MoebooruMod(loader.Module):
     @loader.unrestricted
     @loader.ratelimit
     async def yrandomcmd(self, message):
-        """Random posted art"""
-
-        args = utils.get_args(message)
+        """The random posted art"""
         await message.delete()
 
-        params = f"?login={self.config['yandere_login']}&password_hash={self.config['yandere_password_hash']}&tags=order:random"
+        params = "?tags=order:random"
         async with aiohttp.ClientSession() as session:
             async with session.get(self.strings["url"] + params) as get:
                 art_data = await get.json()
@@ -104,7 +106,7 @@ class MoebooruMod(loader.Module):
         reply = await message.get_reply_message()
         args = utils.get_args(message)
         if reply and args:
-            yandere_id = reply.raw_text.split("🆔")[1][2:]
+            yandere_id = reply.raw_text.split("🆔")[1].split('/')[5]
 
             params = {"id": yandere_id, "score": args[0]}
             async with aiohttp.ClientSession() as session:
@@ -129,16 +131,16 @@ class MoebooruMod(loader.Module):
         elif reply:
             yandere_id = reply.raw_text.split("🆔")[1][2:]
             kb = [
-                [{"text": "Bad", "callback": self.vote, "args": [-1, yandere_id]}],
-                [{"text": "Good", "callback": self.vote, "args": [1, yandere_id]}],
-                [{"text": "Great", "callback": self.vote, "args": [2, yandere_id]}],
-                [{"text": "Favorite", "callback": self.vote, "args": [3, yandere_id]}],
+                [{"text": "Bad", "callback": self.inline__vote, "args": [-1, yandere_id]}],
+                [{"text": "Good", "callback": self.inline__vote, "args": [1, yandere_id]}],
+                [{"text": "Great", "callback": self.inline__vote, "args": [2, yandere_id]}],
+                [{"text": "Favorite", "callback": self.inline__vote, "args": [3, yandere_id]}],
             ]
             await self.inline.form(
                 self.strings["vote_text"],
                 message=message,
                 reply_markup=kb,
-                always_allow=loader.dispatcher.security._owner,
+                always_allow=self.client.dispatcher.security._owner,
             )
             return
 
@@ -146,7 +148,70 @@ class MoebooruMod(loader.Module):
         await asyncio.sleep(5)
         await message.delete()
 
-    async def vote(self, call, score, _id) -> None:
+
+    # Inline commands
+    async def ylast_inline_handler(self, query: GeekInlineQuery) -> None:
+        """
+        The last posted art (Inline)
+        """
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.strings["url"]) as get:
+                arts = await get.json()
+                await session.close()
+        
+        inline_query = []
+        for art in arts:
+            inline_query.append(
+                InlineQueryResultPhoto(
+                    id=rand(20),
+                    title="Title",
+                    description="Description",
+                    caption=self.string_builder(art),
+                    thumb_url=art["preview_url"],  
+                    photo_url=art["sample_url"],
+                    parse_mode="html",
+                )
+            )
+
+        await query.answer(
+            inline_query,
+            cache_time=0,
+        )
+
+    async def yrandom_inline_handler(self, query: GeekInlineQuery) -> None:
+        """
+        The random posted art (Inline)
+        """
+        params = "?tags=order:random"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.strings["url"] + params) as get:
+                arts = await get.json()
+                await session.close()
+        
+        inline_query = []
+        for art in arts:
+            inline_query.append(
+                InlineQueryResultPhoto(
+                    id=rand(20),
+                    title="Title",
+                    description="Description",
+                    caption=self.string_builder(art),
+                    thumb_url=art["preview_url"],  
+                    photo_url=art["sample_url"],
+                    parse_mode="html",
+                )
+            )
+
+        await query.answer(
+            inline_query,
+            cache_time=0,
+        )
+
+    # Inline button handler 
+    async def inline__close(self, call: "aiogram.types.CallbackQuery") -> None:
+        await call.delete()
+
+    async def inline__vote(self, call, score, _id) -> None:
         params = {"id": _id, "score": score}
         async with aiohttp.ClientSession() as session:
             async with session.post(
@@ -166,6 +231,3 @@ class MoebooruMod(loader.Module):
             await call.edit(self.strings("vote_login"), reply_markup=kb)
         else:
             await call.edit(self.strings("vote_error"), reply_markup=kb)
-
-    async def inline__close(self, call: "aiogram.types.CallbackQuery") -> None:
-        await call.delete()
