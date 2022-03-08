@@ -45,3 +45,20 @@
 | .nhid id         | Search hentai manga by id  |
 | .nhrandom        | Random hentai manga        |
 | .nhtag [tag tag] | Search hentai manga by tag |
+
+## AniLibria [ONLY GEEKTG]
+
+| Name                                                         | Description                                                  | Download                                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [anilibria](https://gitlab.com/CakesTwix/friendly-userbot-modules/-/blob/master/Anime/anilibria.py) | A non-profit project for the dubbing and adaptation of foreign TV series, cartoons and anime | .dlmod https://gitlab.com/CakesTwix/friendly-userbot-modules/-/raw/master/Anime/anilibria.py |
+
+## Commands
+
+| **Command**                       | Description                                     |                                                              |
+| --------------------------------- | ----------------------------------------------- | ------------------------------------------------------------ |
+| .aramdom                          | Возвращает случайный тайтл из базы              |                                                              |
+| .aschedule                        | Получить список последних обновлений тайтлов    |                                                              |
+| @geektg_######_bot asearch [text] | Возвращает список найденных по названию тайтлов |                                                              |
+| **Config**                        |                                                 | **Set**                                                      |
+| CONFIG_MAIL                       | Your mail from anilibria.tv                     | .eval next(filter(lambda x: "AniLibria" == x.strings["name"], self.allmodules.modules)).config["CONFIG_MAIL"] = "Your mail" |
+| CONFIG_PASS                       | Your password from anilibria.tv                 | .eval next(filter(lambda x: "AniLibria" == x.strings["name"], self.allmodules.modules)).config["CONFIG_PASS"] = "Your password" |
