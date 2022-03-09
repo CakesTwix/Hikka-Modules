@@ -1,11 +1,13 @@
-__version__ = (1, 0, 0)
+__version__ = (1, 0, 1)
 
-# requires: requests
+# requires: requests bs4 lxml
 
 import logging
 from requests import get
 from .. import loader, utils
 import asyncio
+import aiohttp
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
