@@ -1,13 +1,19 @@
-__version__ = (1, 0, 1)
+__version__ = (1, 1, 0)
 
 # requires: requests bs4 lxml
+# scope: inline
 
-import logging
-from requests import get
-from .. import loader, utils
 import asyncio
+import logging
+
 import aiohttp
+from aiogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
+                           InlineQueryResultArticle, InputTextMessageContent)
 from bs4 import BeautifulSoup
+from requests import get
+
+from .. import loader, utils
+from ..inline import GeekInlineQuery, rand
 
 logger = logging.getLogger(__name__)
 
@@ -174,3 +180,75 @@ class CustomRomsMod(loader.Module):
 
             releases += f'{name}: <a href={data["magisk"]["link"]}>APK v{data["magisk"]["version"]}</a> | <a href={data["magisk"]["note"]}>Changelog</a>\n'
         await utils.answer(message, releases)
+
+    # Inline commands
+    async def opengapps_inline_handler(self, query: GeekInlineQuery) -> None:
+        """
+        OpenGApps (Inline)
+        @allow: all
+        """
+        text = query.args
+
+        async with aiohttp.ClientSession() as session:
+                async with session.get("https://api.opengapps.org/list") as get:
+                    opengapps_list = await get.json()
+                    await session.close()
+
+        arch_dict = {}
+        version_text = "<b>Avilable versions</b> :\n"
+        for arch in opengapps_list['archs']:
+            apis_list = []
+            for apis in opengapps_list['archs'][arch]['apis']:
+                apis_list.append(str(apis))
+            arch_dict[arch] = apis_list
+            version_text += f"<b>{arch}</b> : {', '.join(apis_list)}\n"
+
+        if not text:
+            await query.answer(
+            [
+                InlineQueryResultArticle(
+                    id=rand(20),
+                    title="Select android version for your device",
+                    description="ℹ For example : 10.0. Click for more versions",
+                    input_message_content=InputTextMessageContent(
+                        version_text, "HTML", disable_web_page_preview=True
+                    ),
+                    thumb_url="https://img.icons8.com/android/128/26e07f/android.png",
+                    thumb_width=128,
+                    thumb_height=128,
+                )
+            ],
+            cache_time=0,
+            )
+            return
+
+        if len(text.split()) == 1:
+
+            archs_inline = []
+            archs_photo = {"arm": "https://img.icons8.com/android/128/26e07f/32bit.png", "arm64": "https://img.icons8.com/android/128/26e07f/64bit.png",
+                           "x86": "https://img.icons8.com/android/128/26e07f/x86.png", "x86_64": "https://img.icons8.com/android/128/26e07f/x64.png"}
+            
+            for arch in opengapps_list['archs']: # arm arm64 x86 etc
+                if text in arch_dict[arch]:
+                    markup = InlineKeyboardMarkup(row_width=3)
+                    for variant in opengapps_list['archs'][arch]['apis'][text]['variants']: # pico nano etc
+                        markup.insert(InlineKeyboardButton(variant['name'], url=variant['zip']))
+
+                    archs_inline.append(InlineQueryResultArticle(
+                        id=rand(20),
+                        title=arch,
+                        description="ℹ Select arch for your device",
+                        input_message_content=InputTextMessageContent(f"OpenGApps for Android {text} {arch}", "HTML", disable_web_page_preview=True),
+                        thumb_url=archs_photo[arch],
+                        thumb_width=128,
+                        thumb_height=128,
+                        reply_markup=markup,
+                        )
+                    )
+                    markup = None
+
+
+
+            await query.answer(archs_inline, cache_time=0)
+        
+
