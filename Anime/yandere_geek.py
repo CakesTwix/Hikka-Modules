@@ -1,4 +1,4 @@
-__version__ = (1, 1, 0)
+__version__ = (1, 2, 0)
 
 # requires: aiohttp
 # scope: inline_control
@@ -153,6 +153,7 @@ class MoebooruMod(loader.Module):
     async def ylast_inline_handler(self, query: GeekInlineQuery) -> None:
         """
         The last posted art (Inline)
+        @allow: all
         """
         async with aiohttp.ClientSession() as session:
             async with session.get(self.strings["url"]) as get:
@@ -181,8 +182,45 @@ class MoebooruMod(loader.Module):
     async def yrandom_inline_handler(self, query: GeekInlineQuery) -> None:
         """
         The random posted art (Inline)
+        @allow: all
         """
         params = "?tags=order:random"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.strings["url"] + params) as get:
+                arts = await get.json()
+                await session.close()
+        
+        inline_query = []
+        for art in arts:
+            inline_query.append(
+                InlineQueryResultPhoto(
+                    id=rand(20),
+                    title="Title",
+                    description="Description",
+                    caption=self.string_builder(art),
+                    thumb_url=art["preview_url"],  
+                    photo_url=art["sample_url"],
+                    parse_mode="html",
+                )
+            )
+
+        await query.answer(
+            inline_query,
+            cache_time=0,
+        )
+
+    async def ysearch_inline_handler(self, query: GeekInlineQuery) -> None:
+        """
+        Search art by tags.  (https://yande.re/help)
+        @allow: all
+        """
+        text = query.args
+
+        if not text:
+            return
+
+
+        params = "?tags=order:random " + text
         async with aiohttp.ClientSession() as session:
             async with session.get(self.strings["url"] + params) as get:
                 arts = await get.json()

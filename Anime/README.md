@@ -8,8 +8,8 @@
 
 | **Command**                   | Description          |                                                              |
 | ----------------------------- | -------------------- | ------------------------------------------------------------ |
-| .ylast (has Inline mode)      | The last posted art  |                                                              |
-| .yrandom (has Inline mode)    | Random posted art    |                                                              |
+| .ylast                        | The last posted art  |                                                              |
+| .yrandom                      | Random posted art    |                                                              |
 | .yvote [reply [-1, 1, 2, 3] ] | Voting for art.      |                                                              |
 | **Config**                    |                      | **Set**                                                      |
 | yandere_login                 | Login from yande.re  | .eval next(filter(lambda x: "Yandere" == x.strings["name"], self.allmodules.modules)).config["yandere_login"] = "Your nickname" |
@@ -25,9 +25,10 @@
 
 | **Command**                            | Description                                                 |                                                              |
 | -------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------ |
-| .ylast                                 | The last posted art                                         |                                                              |
-| .yrandom                               | Random posted art                                           |                                                              |
+| .ylast (has Inline                     | The last posted art                                         |                                                              |
+| .yrandom (has Inline                   | Random posted art                                           |                                                              |
 | .yvote [reply or reply [-1, 1, 2, 3] ] | Voting for art. Provides an Inline keyboard for convenience |                                                              |
+| @geektg_######_bot ysearch [tags]      | Search art by tags.  (https://yande.re/help)                |                                                              |
 | **Config**                             |                                                             | **Set**                                                      |
 | yandere_login                          | Login from yande.re                                         | .eval next(filter(lambda x: "Yandere" == x.strings["name"], self.allmodules.modules)).config["yandere_login"] = "Your nickname" |
 | yandere_password_hash                  | SHA1 hashed password                                        | .eval next(filter(lambda x: "Yandere" == x.strings["name"], self.allmodules.modules)).config["yandere_password_hash"] = "Your password" |
