@@ -1,4 +1,4 @@
-__version__ = (1, 0, 1)
+__version__ = (1, 1, 0)
 
 # requires: requests bs4 lxml
 
@@ -20,24 +20,28 @@ class CustomRomsMod(loader.Module):
 
     strings = {
         "name": "ROMs",
-        "download": "⬇️ <b>Download<b>",
+        "download": "⬇️ <b>Download<b> :",
         "no_device": "No device.",
         "no_codename": "Pls codename((",
+        "general_error": "Oh no, cringe, error"
     }
 
     twrp_api = "https://dl.twrp.me/"
 
+
+    # ROMs
     @loader.unrestricted
     @loader.ratelimit
     async def sakuracmd(self, message):
         """Project Sakura"""
-
         args = utils.get_args(message)
         if args:
             device = args[0].lower()
-            data = get(
-                "https://raw.githubusercontent.com/ProjectSakura/OTA/11/devices.json"
-            ).json()
+            async with aiohttp.ClientSession() as session:
+                async with session.get("https://raw.githubusercontent.com/ProjectSakura/OTA/11/devices.json") as get:
+                    data = await get.json()
+                    await session.close()
+            
             for item in data:
                 if item["codename"] == device:
                     releases = f"Latest Project Sakura for {item['name']} ({item['codename']}) \n"
@@ -52,7 +56,37 @@ class CustomRomsMod(loader.Module):
             await utils.answer(message, f"{self.strings['no_codename']}")
             await asyncio.sleep(5)
             await message.delete()
+    
+    @loader.unrestricted
+    @loader.ratelimit
+    async def dotoscmd(self, message):
+        """DotOS"""
+        args = utils.get_args(message)
+        if args:
+            device = args[0].lower()
+            async with aiohttp.ClientSession() as session:
+                async with session.get("https://api.droidontime.com/api/ota/{}".format(device)) as get:
+                    if get.ok:
+                        data = await get.json()
+                    else:
+                        await utils.answer(message, f"{self.strings['no_device']}")
+                        await asyncio.sleep(5)
+                        await message.delete()
+                    await session.close()
 
+            releases = f"<b>Latest DotOS for {data['brandName']} {data['deviceName']}</b> (<code>{data['codename']}</code>) \n"
+            releases += f"👤 : {data['maintainerInfo']['name']} \n"
+            releases += f"🆚 : {data['latestVersion']} \n"
+            releases += f"{self.strings['download']} "
+            releases += f"<a href={data['releases'][0]['url']}>{data['releases'][1]['type'].capitalize()}<a/>"
+            releases += f" / <a href={data['releases'][1]['url']}>{data['releases'][1]['type'].capitalize()}<a/>"
+            await utils.answer(message, releases)
+        else:
+            await utils.answer(message, f"{self.strings['no_codename']}")
+            await asyncio.sleep(5)
+            await message.delete()
+
+    # Recovery
     @loader.unrestricted
     @loader.ratelimit
     async def twrpcmd(self, message):
@@ -158,6 +192,7 @@ class CustomRomsMod(loader.Module):
 
             await utils.answer(message, releases)
 
+    # Other
     @loader.unrestricted
     @loader.ratelimit
     async def magiskcmd(self, message):
