@@ -1,3 +1,13 @@
+"""
+
+    █▀▀ ▄▀█ █▄▀ █▀▀ █▀ ▀█▀ █░█░█ █ ▀▄▀
+    █▄▄ █▀█ █░█ ██▄ ▄█ ░█░ ▀▄▀▄▀ █ █░█
+
+    Copyleft 2022 t.me/cakestwix                                                            
+    This program is free software; you can redistribute it and/or modify 
+
+"""
+
 __version__ = (1, 1, 0)
 
 # meta pic: https://i0.wp.com/alliancestake.org/wp-content/uploads/2017/09/icon-circle-tools-blue-1.png?fit=300%2C300&ssl=1

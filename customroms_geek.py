@@ -1,3 +1,13 @@
+"""
+
+    █▀▀ ▄▀█ █▄▀ █▀▀ █▀ ▀█▀ █░█░█ █ ▀▄▀
+    █▄▄ █▀█ █░█ ██▄ ▄█ ░█░ ▀▄▀▄▀ █ █░█
+
+    Copyleft 2022 t.me/cakestwix                                                            
+    This program is free software; you can redistribute it and/or modify 
+
+"""
+
 __version__ = (1, 2, 0)
 
 # requires: requests bs4 lxml

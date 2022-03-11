@@ -1,3 +1,13 @@
+"""
+
+    █▀▀ ▄▀█ █▄▀ █▀▀ █▀ ▀█▀ █░█░█ █ ▀▄▀
+    █▄▄ █▀█ █░█ ██▄ ▄█ ░█░ ▀▄▀▄▀ █ █░█
+
+    Copyleft 2022 t.me/cakestwix                                                            
+    This program is free software; you can redistribute it and/or modify 
+
+"""
+
 __version__ = (1, 0, 0)
 
 # meta pic: https://icon-library.com/images/google-translate-icon/google-translate-icon-28.jpg
