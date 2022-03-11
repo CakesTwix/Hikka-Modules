@@ -1,4 +1,6 @@
-__version__ = (1, 0, 0)
+__version__ = (1, 1, 0)
+
+# meta pic: https://aveptext.ru/wp-content/uploads/dorabotka-icon.png
 
 import logging
 import aiohttp
@@ -61,4 +63,41 @@ class RToolsMod(loader.Module):
             await utils.answer(message, self.strings["no_args"])
             await asyncio.sleep(5)
             await message.delete()
+
+    @loader.unrestricted
+    @loader.ratelimit
+    async def npcmd(self, message):
+        """Нова Пошта"""
+        args = utils.get_args(message)
+        if args:
+            document_number = args[0].lower()
+
+            data = {
+                "apiKey": "abe3a74549c55e4b703ed042c5169406",
+                "modelName": "TrackingDocument",
+                "calledMethod": "getStatusDocuments",
+                "methodProperties": {
+                    "Documents": [{"DocumentNumber": document_number, "Phone": ""}]
+                },
+            }
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    "https://api.novaposhta.ua/v2.0/json/", json=data
+                ) as get:
+                    answer = await get.json()
+                    await session.close()
+            item = answer["data"][0]
+
+            caption = f"Экспресс-накладная: {item['Number']}"
+            caption += f"\nСтатус: {item['Status']}"
+            if "DateCreated" in item:
+                caption += f"\nБыло создано: {item['DateCreated']}"
+                caption += f"\nОжид. дата доставки: {item['ScheduledDeliveryDate']}"
+                caption += f"\n{item['CitySender']} -> {item['CityRecipient']}"
+
+            if item.get("DocumentCost") is not None:
+                caption += f"\nЦена доставки: {item['DocumentCost']} грн."
+
+            await utils.answer(message, caption)
         

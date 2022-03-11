@@ -2,6 +2,7 @@ __version__ = (1, 2, 0)
 
 # requires: requests bs4 lxml
 # scope: inline
+# meta pic: https://styles.redditmedia.com/t5_3htpk/styles/communityIcon_vlbulj1gn8l11.png
 
 import asyncio
 import logging

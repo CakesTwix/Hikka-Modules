@@ -1,6 +1,7 @@
 __version__ = (1, 0, 0)
 
 # requires: requests hentai
+# meta pic: https://seeklogo.com/images/H/hentai-haven-logo-B9D8C4B3B8-seeklogo.com.png
 
 import asyncio
 import logging

@@ -1,6 +1,7 @@
 __version__ = (1, 0, 0)
 
 # requires: aiohttp
+# meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
 
 import logging
 import aiohttp, asyncio

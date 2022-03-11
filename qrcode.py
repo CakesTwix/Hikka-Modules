@@ -1,6 +1,7 @@
 __version__ = (1, 0, 0)
 
 # requires: qrcode
+# meta pic: https://cdn1.iconfinder.com/data/icons/social-messaging-ui-color-shapes/128/qr-code-circle-blue-512.png
 
 import asyncio
 import io

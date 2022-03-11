@@ -2,7 +2,7 @@ __version__ = (1, 2, 0)
 
 # requires: aiohttp
 # scope: inline_control
-
+# meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
 
 import logging
 import aiohttp
@@ -18,11 +18,11 @@ logger = logging.getLogger(__name__)
 @loader.unrestricted
 @loader.ratelimit
 @loader.tds
-class MoebooruMod(loader.Module):
+class InlineMoebooruMod(loader.Module):
     """Module for obtaining art from the ImageBoard yande.re"""
 
     strings = {
-        "name": "Yandere",
+        "name": "InlileYandere",
         "url": "https://yande.re/post.json",
         "vote_url": "https://yande.re/post/vote.json?login={login}&password_hash={password_hash}",
         "vote_text": "Vote for this art. The buttons are only available to me",

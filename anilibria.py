@@ -2,6 +2,7 @@ __version__ = (1, 0, 0)
 
 # requires: aiohttp
 # scope: inline_control
+# meta pic: https://image.winudf.com/v2/image/cnUucmFkaWF0aW9ueC5hbmlsaWJyaWEuYXBwX2ljb25fMTUyODYyNzQ2NV8wMjY/icon.png?w=&fakeurl=1
 
 from .. import loader, main
 from ..inline import GeekInlineQuery, rand
