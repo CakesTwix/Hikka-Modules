@@ -2,6 +2,8 @@ __version__ = (1, 2, 0)
 
 # requires: requests bs4 lxml
 # scope: inline
+# scope: geektg_only
+# scope: geektg_min 3.1.15
 # meta pic: https://styles.redditmedia.com/t5_3htpk/styles/communityIcon_vlbulj1gn8l11.png
 
 import asyncio
