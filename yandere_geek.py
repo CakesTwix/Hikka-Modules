@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 2, 0)
+__version__ = (1, 2, 1)
 
 # requires: aiohttp
 # scope: inline
@@ -34,7 +34,7 @@ class InlineMoebooruMod(loader.Module):
     """Module for obtaining art from the ImageBoard yande.re"""
 
     strings = {
-        "name": "InlileYandere",
+        "name": "InlineYandere",
         "url": "https://yande.re/post.json",
         "vote_url": "https://yande.re/post/vote.json?login={login}&password_hash={password_hash}",
         "vote_text": "Vote for this art. The buttons are only available to me",
@@ -59,9 +59,6 @@ class InlineMoebooruMod(loader.Module):
     async def client_ready(self, client, db) -> None:
         self.db = db
         self.client = client
-
-        if main.__version__ < (3, 1, 14):
-            raise Exception("GeekTG Update Required!")
 
     def string_builder(self, json):
         string = f"Tags : {quote_html(json['tags'])}\n"
