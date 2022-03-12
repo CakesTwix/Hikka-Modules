@@ -8,9 +8,12 @@
 
 """
 
-__version__ = (1, 1, 0)
+__version__ = (1, 1, 1)
 
 # requires: requests hentai
+# scope: inline
+# scope: geektg_only
+# scope: geektg_min 3.1.15
 # meta pic: https://seeklogo.com/images/H/hentai-haven-logo-B9D8C4B3B8-seeklogo.com.png
 
 import asyncio
