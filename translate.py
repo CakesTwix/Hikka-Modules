@@ -11,6 +11,7 @@
 __version__ = (1, 0, 0)
 
 # meta pic: https://icon-library.com/images/google-translate-icon/google-translate-icon-28.jpg
+# meta developer: @CakesTwix
 
 import logging
 import aiohttp, asyncio

@@ -12,6 +12,7 @@ __version__ = (1, 1, 0)
 
 # requires: requests bs4 lxml
 # meta pic: https://styles.redditmedia.com/t5_3htpk/styles/communityIcon_vlbulj1gn8l11.png
+# meta developer: @CakesTwix
 
 import logging
 from requests import get

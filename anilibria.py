@@ -15,6 +15,7 @@ __version__ = (1, 0, 0)
 # scope: geektg_only
 # scope: geektg_min 3.1.15
 # meta pic: https://image.winudf.com/v2/image/cnUucmFkaWF0aW9ueC5hbmlsaWJyaWEuYXBwX2ljb25fMTUyODYyNzQ2NV8wMjY/icon.png?w=&fakeurl=1
+# meta developer: @CakesTwix
 
 from .. import loader, main
 from ..inline import GeekInlineQuery, rand

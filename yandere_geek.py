@@ -15,6 +15,7 @@ __version__ = (1, 2, 1)
 # scope: geektg_only
 # scope: geektg_min 3.1.15
 # meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
+# meta developer: @CakesTwix
 
 import logging
 import aiohttp
