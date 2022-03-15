@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 0, 0)
+__version__ = (1, 0, 1)
 
 # scope: inline
 # scope: geektg_only
@@ -41,6 +41,7 @@ class HurtomMod(loader.Module):
         "no_args": "🚫 <b>Будь ласка, введіть ключові слова, за якими я знайду Вам тему</b>",
         "no_args_inline": "Будь ласка, введіть ключові слова, за якими я знайду Вам тему",
         "no_args_inline_description": "ℹ Наприклад : Кот",
+        "no_torrent": "🚫 Не було знайдено жодного торрента",
         "forum_name": "<b>Назва Розділу</b> : ",
         "comments": "<b>Коментарі</b> : ",
         "size": "<b>Розмір</b> : ",
@@ -82,6 +83,12 @@ class HurtomMod(loader.Module):
             ) as get:
                 if get.ok:
                     data = await get.json()
+                    if data == []:
+                        await utils.answer(message, self.strings['no_torrent'])
+                        return
+                else:
+                    return
+
             await session.close()
 
         await utils.answer(message, self.stringBuilder(data[0]))
@@ -121,6 +128,11 @@ class HurtomMod(loader.Module):
             ) as get:
                 if get.ok:
                     data = await get.json()
+                    if data == []:
+                        return
+                else:
+                    return
+
             await session.close()
 
         inline_query = []
