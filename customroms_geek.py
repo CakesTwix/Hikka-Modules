@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 2, 0)
+__version__ = (1, 3, 0)
 
 # requires: requests bs4 lxml
 # scope: inline
@@ -56,8 +56,22 @@ class CustomRomsMod(loader.Module):
         "general_info": "General info about {} builds",
         "general_info_description": "ℹ Maintainer, latest version, etc",
         "not_updating": "❌ : There will be no updates at this time",
-        "updated": "✅ : Updated"
+        "updated": "✅ : Updated",
+        "magisk_latest": "𝗟𝗮𝘁𝗲𝘀𝘁 𝗠𝗮𝗴𝗶𝘀𝗸 𝗥𝗲𝗹𝗲𝗮𝘀𝗲𝘀:",
+        "app_by": "by {}",
+        "Stable": "⦁ 𝗦𝘁𝗮𝗯𝗹𝗲",
+        "Beta": "⦁ 𝗕𝗲𝘁𝗮", 
+        "Canary": "⦁ 𝗖𝗮𝗻𝗮𝗿𝘆",
     }
+
+    magisk_dict = {"topjohnwu": [{"Stable": "master/stable.json", 
+                                      "Beta": "master/stable.json", 
+                                      "Canary": "master/stable.json"},
+                                      "https://raw.githubusercontent.com/topjohnwu/magisk-files/"],
+                   "vvb2060": [{"Stable": "master/lite.json",
+                                "Canary": "alpha/alpha.json"},
+                                "https://raw.githubusercontent.com/vvb2060/magisk_files/"]
+        }
 
     twrp_api = "https://dl.twrp.me/"
 
@@ -236,7 +250,7 @@ class CustomRomsMod(loader.Module):
             "⦁ 𝗕𝗲𝘁𝗮": magisk_repo + "master/beta.json",
             "⦁ 𝗖𝗮𝗻𝗮𝗿𝘆": magisk_repo + "master/canary.json",
         }
-        releases = "<code><i>𝗟𝗮𝘁𝗲𝘀𝘁 𝗠𝗮𝗴𝗶𝘀𝗸 𝗥𝗲𝗹𝗲𝗮𝘀𝗲:</i></code>\n\n"
+        releases = f"<code><i>{self.strings['magisk_latest']}</i></code>\n\n"
         for name, release_url in magisk_dict.items():
             data = get(release_url).json()
 
@@ -444,3 +458,39 @@ class CustomRomsMod(loader.Module):
                 ],
                 cache_time=0,
             )
+
+    async def magisk_inline_handler(self, query: GeekInlineQuery) -> None:
+        """
+        Magisk (Inline)
+        @allow: all
+        """
+        inline_query = []
+        latest_releases = f"<code><i>{self.strings['magisk_latest']}</i></code>\n\n"
+
+        for magisk_author in self.magisk_dict: # topjohnwu vvb2060
+            text_type = ""
+            for magisk_type in self.magisk_dict[magisk_author][0]: # List(Stable, Beta, etc) by author
+
+                base_url = self.magisk_dict[magisk_author][1]
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(base_url + self.magisk_dict[magisk_author][0][magisk_type]) as get:
+                        data = await get.json(content_type=None)
+
+                text_type += f'{self.strings[magisk_type]}: {hlink("APK v" + data["magisk"]["version"], data["magisk"]["link"])} | {hlink("Changelog", data["magisk"]["note"])} \n'
+            
+            inline_query.append(
+                InlineQueryResultArticle(
+                    id=rand(20),
+                    title=self.strings["magisk_latest"],
+                    description=self.strings["app_by"].format(magisk_author),
+                    input_message_content=InputTextMessageContent(
+                        latest_releases + text_type, "HTML", disable_web_page_preview=True
+                    ),
+                    thumb_url="https://upload.wikimedia.org/wikipedia/commons/b/b8/Magisk_Logo.png",
+                    thumb_width=128,
+                    thumb_height=128,
+                )
+            )
+
+
+        await query.answer(inline_query, cache_time=0)
