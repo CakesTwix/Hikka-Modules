@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 1, 0)
+__version__ = (1, 2, 0)
 
 # requires: requests bs4 lxml
 # meta pic: https://styles.redditmedia.com/t5_3htpk/styles/communityIcon_vlbulj1gn8l11.png
@@ -32,10 +32,10 @@ class CustomRomsMod(loader.Module):
 
     strings = {
         "name": "ROMs",
-        "download": "⬇️ <b>Download<b> :",
-        "no_device": "No device.",
-        "no_codename": "Pls codename((",
-        "general_error": "Oh no, cringe, error"
+        "download": "⬇️ <b>Download</b> :",
+        "no_device": "🚫 <b>No device.<b>",
+        "no_codename": "🚫 <b>Pls codename((<b>",
+        "general_error": "🚫 <b>Oh no, cringe, error<b>"
     }
 
     twrp_api = "https://dl.twrp.me/"
@@ -97,6 +97,36 @@ class CustomRomsMod(loader.Module):
             await utils.answer(message, f"{self.strings['no_codename']}")
             await asyncio.sleep(5)
             await message.delete()
+
+    @loader.unrestricted
+    @loader.ratelimit
+    async def aexcmd(self, message):
+        """AOSP Extended"""
+        args = utils.get_args(message)
+        if args:
+            device_codename = args[0].lower()
+            async with aiohttp.ClientSession() as session:
+                async with session.get("https://api.aospextended.com/devices/") as get:
+                    devices_json = await get.json()
+                
+                for device in devices_json:
+                    if device["codename"] == device_codename:
+                        releases = f"Latest AOSP Extended for {device['brand']} {device['name']} ({device['codename']}) \n"
+                        #releases += f"👤 by {device['maintainer_name']} \n"
+                        releases += f"{self.strings['download']}"
+                        for version in device['supported_versions']:
+                            async with session.get("https://api.aospextended.com/builds/{}/{}".format(device_codename,version['version_code'])) as get:
+                                version_json = await get.json()
+                            if "error" not in version_json:
+                                releases += f" <a href={version_json[0]['download_link']}>{version['version_name']}</a> |"
+                        await session.close()
+                        await utils.answer(message, releases)
+                        return
+
+        await utils.answer(message, f"{self.strings['no_device']}")
+        await asyncio.sleep(5)
+        await message.delete()
+
 
     # Recovery
     @loader.unrestricted

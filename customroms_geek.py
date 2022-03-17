@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 3, 0)
+__version__ = (1, 4, 0)
 
 # requires: requests bs4 lxml
 # scope: inline
@@ -45,12 +45,13 @@ class CustomRomsMod(loader.Module):
 
     strings = {
         "name": "InlineROMs",
-        "download": "⬇️ <b>Download<b> :",
-        "no_device": "No device.",
+        "download": "⬇️ <b>Download</b> :",
+        "no_device": "<b>No device.</b>",
         "no_device_info": "ℹ Please check the correct codename or availability of the site",
-        "no_codename": "Pls codename((",
+        "no_codename": "<b>Pls codename((</b>",
         "write_codename": "Write the code name of your device",
         "latest_releases": "ℹ Latest {} releases",
+        "latest_releases_no_format": "ℹ Latest ROM releases",
         "latest_releases_device": "ℹ Latest {} {} releases for {}",
         "gapps_version": "GApps version",
         "vanilla_version": "Vanilla version",
@@ -59,10 +60,13 @@ class CustomRomsMod(loader.Module):
         "not_updating": "❌ : There will be no updates at this time",
         "updated": "✅ : Updated",
         "magisk_latest": "𝗟𝗮𝘁𝗲𝘀𝘁 𝗠𝗮𝗴𝗶𝘀𝗸 𝗥𝗲𝗹𝗲𝗮𝘀𝗲𝘀:",
-        "app_by": "by {}",
+        "app_by": "👤 by {}",
         "Stable": "⦁ 𝗦𝘁𝗮𝗯𝗹𝗲",
         "Beta": "⦁ 𝗕𝗲𝘁𝗮", 
         "Canary": "⦁ 𝗖𝗮𝗻𝗮𝗿𝘆",
+        "md5": "<b>MD5: </b>",
+        "count": "<b>Downloads count: </b>",
+        "customAvbSupported": "<b>Custom Avb Supported:</b> "
     }
 
     magisk_dict = {"topjohnwu": [{"Stable": "master/stable.json", 
@@ -75,7 +79,19 @@ class CustomRomsMod(loader.Module):
         }
 
     twrp_api = "https://dl.twrp.me/"
-
+    no_codename = [
+                    InlineQueryResultArticle(
+                        id=rand(20),
+                        title=strings["write_codename"],
+                        description=strings["latest_releases_no_format"],
+                        input_message_content=InputTextMessageContent(
+                            strings["no_codename"], "HTML", disable_web_page_preview=True
+                        ),
+                        thumb_url="https://img.icons8.com/android/128/26e07f/android.png",
+                        thumb_width=128,
+                        thumb_height=128,
+                    )
+                ]
     # ROMs
     @loader.unrestricted
     @loader.ratelimit
@@ -337,6 +353,53 @@ class CustomRomsMod(loader.Module):
                     )
                     markup = None
             await query.answer(archs_inline, cache_time=0)
+    # https://img.icons8.com/fluency/48/26e07f/android-os.png
+    async def aex_inline_handler(self, query: GeekInlineQuery) -> None:
+        """
+        AOSP Extended (Inline)
+        @allow: all
+        """
+        device_codename = query.args
+
+        if not device_codename:
+            await query.answer(self.no_codename, cache_time=0)
+            return
+        
+        async with aiohttp.ClientSession() as session:
+                async with session.get("https://api.aospextended.com/devices/") as get:
+                    devices_json = await get.json()
+                
+                for device in devices_json:
+                    if device["codename"] == device_codename:
+                        inline_query = []
+                        for version in device['supported_versions']:
+                            releases = f"Latest AOSP Extended for {device['brand']} {device['name']} ({device['codename']}) \n"
+                            async with session.get("https://api.aospextended.com/builds/{}/{}".format(device_codename,version['version_code'])) as get:
+                                version_json = await get.json()
+                            if "error" not in version_json:
+
+                                releases += f"{self.strings['app_by'].format(version['maintainer_name'])} \n"
+                                releases += f"💬 {hlink('Telegram Chat', version['tg_link'])} | {hlink('XDA', version['xda_thread'])} | {hlink('XDA Maintainer', version['maintainer_url'])} \n"
+                                releases += f"{self.strings['download']} {hlink(version_json[0]['file_name'], version_json[0]['download_link'])} \n\n"
+
+                                releases += f"{self.strings['md5']}{version_json[0]['md5']} \n"
+                                releases += f"{self.strings['count']}{version_json[0]['downloads_count']} \n"
+                                releases += f"{self.strings['customAvbSupported']} {'Yes' if version_json[0]['isCustomAvbSupported'] else 'No'}"
+
+                                inline_query.append(
+                                    InlineQueryResultArticle(
+                                        id=rand(50),
+                                        title=version['version_name'],
+                                        description=self.strings["app_by"].format(version["maintainer_name"]),
+                                        input_message_content=InputTextMessageContent(
+                                            releases,
+                                            "HTML",
+                                            disable_web_page_preview=True,
+                                        ),
+                                    )
+                                )
+                        await session.close()
+                        await query.answer(inline_query, cache_time=0)
 
     async def dotos_inline_handler(self, query: GeekInlineQuery) -> None:
         """
@@ -346,22 +409,7 @@ class CustomRomsMod(loader.Module):
         text = query.args
 
         if not text:
-            await query.answer(
-                [
-                    InlineQueryResultArticle(
-                        id=rand(20),
-                        title=self.strings["write_codename"],
-                        description=self.strings["latest_releases"].format("DotOS"),
-                        input_message_content=InputTextMessageContent(
-                            self.strings["no_codename"], "HTML", disable_web_page_preview=True
-                        ),
-                        thumb_url="https://img.icons8.com/android/128/26e07f/android.png",
-                        thumb_width=128,
-                        thumb_height=128,
-                    )
-                ],
-                cache_time=0,
-            )
+            await query.answer(self.no_codename, cache_time=0)
             return
 
         if len(text.split()) == 1:
