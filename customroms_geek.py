@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 4, 0)
+__version__ = (1, 4, 1)
 
 # requires: requests bs4 lxml
 # scope: inline
@@ -75,7 +75,11 @@ class CustomRomsMod(loader.Module):
                                       "https://raw.githubusercontent.com/topjohnwu/magisk-files/"],
                    "vvb2060": [{"Stable": "master/lite.json",
                                 "Canary": "alpha/alpha.json"},
-                                "https://raw.githubusercontent.com/vvb2060/magisk_files/"]
+                                "https://raw.githubusercontent.com/vvb2060/magisk_files/"],
+                    "TheHitMan7": [{"Stable": "stable.json",
+                                    "Beta": "beta.json", 
+                                    "Canary": "canary.json"},
+                                    "https://raw.githubusercontent.com/TheHitMan7/Magisk-Files/master/configs/"]
         }
 
     twrp_api = "https://dl.twrp.me/"
@@ -526,7 +530,7 @@ class CustomRomsMod(loader.Module):
                         data = await get.json(content_type=None)
 
                 text_type += f'{self.strings[magisk_type]}: {hlink("APK v" + data["magisk"]["version"], data["magisk"]["link"])} | {hlink("Changelog", data["magisk"]["note"])} \n'
-            
+            text_type += f'\n{self.strings["app_by"].format(magisk_author)}'
             inline_query.append(
                 InlineQueryResultArticle(
                     id=rand(20),
