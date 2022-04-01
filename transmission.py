@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 0, 0)
+__version__ = (1, 0, 1)
 
 # requires: transmission-rpc
 # scope: inline
@@ -298,7 +298,7 @@ class TransmissionMod(loader.Module):
         """
         Process button presses
         """
-        await call.answer(call.data, show_alert=True)
+        # await call.answer(call.data, show_alert=True) # Debug
 
         # Update
         if call.data[:11] == "cake_update":
