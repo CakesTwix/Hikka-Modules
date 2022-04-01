@@ -10,13 +10,11 @@
 
 """
 
-__version__ = (1, 0, 0)
+__version__ = (1, 0, 1)
 
 
 import logging
-import asyncio
 from .. import loader, utils
-from telethon import types
 
 logger = logging.getLogger(__name__)
 
