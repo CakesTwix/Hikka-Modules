@@ -3,7 +3,7 @@
     █▀▀ ▄▀█ █▄▀ █▀▀ █▀ ▀█▀ █░█░█ █ ▀▄▀
     █▄▄ █▀█ █░█ ██▄ ▄█ ░█░ ▀▄▀▄▀ █ █░█
 
-    Copyleft 2022 t.me/cakestwix
+    Copyleft 2022 t.me/CakesTwix
     This program is free software; you can redistribute it and/or modify
 
     Source - https://github.com/sm1ke000FriendlyTelegram/Friendly-Telegram/raw/main/TikTokMOD.py
