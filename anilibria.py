@@ -8,11 +8,10 @@
 
 """
 
-__version__ = (1, 0, 0)
+__version__ = (1, 0, 1)
 
 # requires: aiohttp
 # scope: inline
-# scope: geektg_only
 # scope: geektg_min 3.1.15
 # meta pic: https://image.winudf.com/v2/image/cnUucmFkaWF0aW9ueC5hbmlsaWJyaWEuYXBwX2ljb25fMTUyODYyNzQ2NV8wMjY/icon.png?w=&fakeurl=1
 # meta developer: @CakesTwix
@@ -83,8 +82,6 @@ class AniLibriaMod(loader.Module):
 
     async def client_ready(self, client, db) -> None:
         self._client = client
-        if main.__version__ < (3, 1, 14):
-            raise Exception("GeekTG Update Required!")
 
     @loader.unrestricted
     @loader.ratelimit
