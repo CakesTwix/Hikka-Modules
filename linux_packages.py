@@ -17,6 +17,7 @@ __version__ = (1, 0, 0)
 import aiohttp
 import logging
 import asyncio
+
 from aiogram.types import CallbackQuery
 from typing import Union
 from .. import loader, utils
@@ -42,6 +43,7 @@ class LinuxPackagesMod(loader.Module):
         "ver": "<b>Version:</b> {}\n",
         "description": "<b>Description:</b> {}\n",
         "maintainer": "<b>Maintainer:</b> {}\n",
+        "no_packages": "<b>No packages</b>...",
     }
 
     async def aurcmd(self, message):  # .aur spotify | .aur
@@ -57,6 +59,8 @@ class LinuxPackagesMod(loader.Module):
             ) as get:
                 if get.ok:
                     packages = await get.json()
+                    if packages["resultcount"] == 0:
+                        return await utils.answer(message, self.strings["no_packages"])
 
                     i = 1
                     reply_markup = []
