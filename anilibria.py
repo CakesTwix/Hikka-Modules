@@ -210,7 +210,7 @@ class AniLibriaMod(loader.Module):
 
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self.api + "searchTitles?search={}&limit=10".format(text)
+                self.api + f"searchTitles?search={text}&limit=10"
             ) as get:
                 search_list = await get.json()
                 await session.close()
@@ -245,7 +245,9 @@ class AniLibriaMod(loader.Module):
     async def inline__close(self, call: CallbackQuery) -> None:
         await call.delete()
 
-    async def inline__favorite(self, call: CallbackQuery, _id: int, method: str) -> None:
+    async def inline__favorite(
+        self, call: CallbackQuery, _id: int, method: str
+    ) -> None:
         _id = str(_id)
         async with aiohttp.ClientSession() as session:
             # get anime by id for update buttons
@@ -263,8 +265,7 @@ class AniLibriaMod(loader.Module):
 
             if method == "addFavorite":
                 async with session.put(
-                    self.api
-                    + "{}?session={}&title_id={}".format(method, self.cookies, _id)
+                    (self.api + f"{method}?session={self.cookies}&title_id={_id}")
                 ) as get:
                     kb.append(
                         [
@@ -277,8 +278,7 @@ class AniLibriaMod(loader.Module):
                     )
             else:  # delFavorite
                 async with session.delete(
-                    self.api
-                    + "{}?session={}&title_id={}".format(method, self.cookies, _id)
+                    (self.api + f"{method}?session={self.cookies}&title_id={_id}")
                 ) as get:
                     kb.append(
                         [
@@ -306,7 +306,9 @@ class AniLibriaMod(loader.Module):
                 reply_markup=kb,
             )
 
-    async def inline__update_schedule(self, call: CallbackQuery, day_inline: int) -> None:
+    async def inline__update_schedule(
+        self, call: CallbackQuery, day_inline: int
+    ) -> None:
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{self.api}getSchedule") as get:
                 schedule_list = await get.json()

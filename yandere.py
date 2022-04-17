@@ -51,8 +51,8 @@ class MoebooruMod(loader.Module):
 
     def string_builder(self, json):
         string = f"Tags : {json['tags']}\n"
-        string += f"©️ : {json['author'] if json['author'] else 'No author'}\n"
-        string += f"🔗 : {json['source'] if json['source'] else 'No source'}\n\n"
+        string += f"©️ : {json['author'] or 'No author'}\n"
+        string += f"🔗 : {json['source'] or 'No source'}\n\n"
         string += (
             f"🆔 : <a href=https://yande.re/post/show/{json['id']}>{json['id']}</a>"
         )

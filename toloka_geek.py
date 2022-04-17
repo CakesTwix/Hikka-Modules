@@ -79,17 +79,14 @@ class HurtomMod(loader.Module):
             return
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://toloka.to/api.php?search={}".format(args)
-            ) as get:
-                if get.ok:
-                    data = await get.json()
-                    if data == []:
-                        await utils.answer(message, self.strings['no_torrent'])
-                        return
-                else:
+            async with session.get(f"https://toloka.to/api.php?search={args}") as get:
+                if not get.ok:
                     return
 
+                data = await get.json()
+                if data == []:
+                    await utils.answer(message, self.strings["no_torrent"])
+                    return
             await session.close()
 
         await utils.answer(message, self.stringBuilder(data[0]))
@@ -124,31 +121,25 @@ class HurtomMod(loader.Module):
             return
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://toloka.to/api.php?search={}".format(text)
-            ) as get:
-                if get.ok:
-                    data = await get.json()
-                    if data == []:
-                        return
-                else:
+            async with session.get(f"https://toloka.to/api.php?search={text}") as get:
+                if not get.ok:
                     return
 
+                data = await get.json()
+                if data == []:
+                    return
             await session.close()
 
-        inline_query = []
-        for torrent in data:
-            inline_query.append(
-                InlineQueryResultArticle(
-                    id=rand(50),
-                    title=torrent["title"],
-                    description=self.strings["size_inline"] + torrent["size"],
-                    input_message_content=InputTextMessageContent(
-                        self.stringBuilder(torrent),
-                        "HTML",
-                        disable_web_page_preview=True,
-                    ),
-                )
+        inline_query = [
+            InlineQueryResultArticle(
+                id=rand(50),
+                title=torrent["title"],
+                description=self.strings["size_inline"] + torrent["size"],
+                input_message_content=InputTextMessageContent(
+                    self.stringBuilder(torrent), "HTML", disable_web_page_preview=True
+                ),
             )
+            for torrent in data
+        ]
 
         await query.answer(inline_query, cache_time=0)

@@ -35,11 +35,10 @@ class CustomRomsMod(loader.Module):
         "download": "⬇️ <b>Download</b> :",
         "no_device": "🚫 <b>No device.<b>",
         "no_codename": "🚫 <b>Pls codename((<b>",
-        "general_error": "🚫 <b>Oh no, cringe, error<b>"
+        "general_error": "🚫 <b>Oh no, cringe, error<b>",
     }
 
     twrp_api = "https://dl.twrp.me/"
-
 
     # ROMs
     @loader.unrestricted
@@ -50,10 +49,12 @@ class CustomRomsMod(loader.Module):
         if args:
             device = args[0].lower()
             async with aiohttp.ClientSession() as session:
-                async with session.get("https://raw.githubusercontent.com/ProjectSakura/OTA/11/devices.json") as get:
+                async with session.get(
+                    "https://raw.githubusercontent.com/ProjectSakura/OTA/11/devices.json"
+                ) as get:
                     data = await get.json()
                     await session.close()
-            
+
             for item in data:
                 if item["codename"] == device:
                     releases = f"Latest Project Sakura for {item['name']} ({item['codename']}) \n"
@@ -68,7 +69,7 @@ class CustomRomsMod(loader.Module):
             await utils.answer(message, f"{self.strings['no_codename']}")
             await asyncio.sleep(5)
             await message.delete()
-    
+
     @loader.unrestricted
     @loader.ratelimit
     async def dotoscmd(self, message):
@@ -77,7 +78,9 @@ class CustomRomsMod(loader.Module):
         if args:
             device = args[0].lower()
             async with aiohttp.ClientSession() as session:
-                async with session.get("https://api.droidontime.com/api/ota/{}".format(device)) as get:
+                async with session.get(
+                    "https://api.droidontime.com/api/ota/{}".format(device)
+                ) as get:
                     if get.ok:
                         data = await get.json()
                     else:
@@ -108,14 +111,18 @@ class CustomRomsMod(loader.Module):
             async with aiohttp.ClientSession() as session:
                 async with session.get("https://api.aospextended.com/devices/") as get:
                     devices_json = await get.json()
-                
+
                 for device in devices_json:
                     if device["codename"] == device_codename:
                         releases = f"Latest AOSP Extended for {device['brand']} {device['name']} ({device['codename']}) \n"
-                        #releases += f"👤 by {device['maintainer_name']} \n"
+                        # releases += f"👤 by {device['maintainer_name']} \n"
                         releases += f"{self.strings['download']}"
-                        for version in device['supported_versions']:
-                            async with session.get("https://api.aospextended.com/builds/{}/{}".format(device_codename,version['version_code'])) as get:
+                        for version in device["supported_versions"]:
+                            async with session.get(
+                                "https://api.aospextended.com/builds/{}/{}".format(
+                                    device_codename, version["version_code"]
+                                )
+                            ) as get:
                                 version_json = await get.json()
                             if "error" not in version_json:
                                 releases += f" <a href={version_json[0]['download_link']}>{version['version_name']}</a> |"
@@ -126,7 +133,6 @@ class CustomRomsMod(loader.Module):
         await utils.answer(message, f"{self.strings['no_device']}")
         await asyncio.sleep(5)
         await message.delete()
-
 
     # Recovery
     @loader.unrestricted
@@ -251,4 +257,3 @@ class CustomRomsMod(loader.Module):
 
             releases += f'{name}: <a href={data["magisk"]["link"]}>APK v{data["magisk"]["version"]}</a> | <a href={data["magisk"]["note"]}>Changelog</a>\n'
         await utils.answer(message, releases)
-

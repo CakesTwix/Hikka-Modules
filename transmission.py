@@ -35,42 +35,44 @@ from transmission_rpc import Client
 from transmission_rpc.utils import format_size
 from transmission_rpc.error import TransmissionConnectError
 
-logger = logging.getLogger(__name__)                  
+logger = logging.getLogger(__name__)
+
 
 @loader.unrestricted
 @loader.ratelimit
 @loader.tds
 class TransmissionMod(loader.Module):
     """Simple torrent client for Transmission"""
-    
-    strings = {"name": "Transmission",
-                "cfg_username":"Username",
-                "cfg_password":"Password",
-                "cfg_port":"Post (9091)",
-                "cfg_host":"Host (localhost)",
-                "cfg_protocol":"Protocol (http)",
-                "cfg_rpc":"RPC url (/transmission/)",
-                "not_ready":"Pls check config",
-                "torrent_name": "<b>Name:</b> ",
-                "torrent_status": "<b>Status:</b> ",
-                "torrent_hash": "<b>Hash:</b> ",
-                "torrent_dir": "<b>Directory:</b> ",
-                "torrent_size": "<b>Size:</b> ",
-                "kb_update": "🔄 Update",
-                "kb_close": "🚫 Close",
-                "torrent_eta": "ETA: ",
-                "torrent_error": "<b>Torrent not found in result</b>",
-                "kb_start": "▶️",
-                "kb_stop": "⏹",
-                "kb_delete": "❌ Delete torrent ❌",
-                "kb_delete_data": "❌ Delete torrent with data ❌",
-                "answer_start": "Torrent starting",
-                "answer_stop": "Torrent stopped",
-                "answer_delete": "Torrent removed",
-                "inline_title": "Torrent Manager",
-                "inline_desc": "ℹ Click to view the parameters",
-                "inline_answer": "ℹ No changes"
-                }
+
+    strings = {
+        "name": "Transmission",
+        "cfg_username": "Username",
+        "cfg_password": "Password",
+        "cfg_port": "Post (9091)",
+        "cfg_host": "Host (localhost)",
+        "cfg_protocol": "Protocol (http)",
+        "cfg_rpc": "RPC url (/transmission/)",
+        "not_ready": "Pls check config",
+        "torrent_name": "<b>Name:</b> ",
+        "torrent_status": "<b>Status:</b> ",
+        "torrent_hash": "<b>Hash:</b> ",
+        "torrent_dir": "<b>Directory:</b> ",
+        "torrent_size": "<b>Size:</b> ",
+        "kb_update": "🔄 Update",
+        "kb_close": "🚫 Close",
+        "torrent_eta": "ETA: ",
+        "torrent_error": "<b>Torrent not found in result</b>",
+        "kb_start": "▶️",
+        "kb_stop": "⏹",
+        "kb_delete": "❌ Delete torrent ❌",
+        "kb_delete_data": "❌ Delete torrent with data ❌",
+        "answer_start": "Torrent starting",
+        "answer_stop": "Torrent stopped",
+        "answer_delete": "Torrent removed",
+        "inline_title": "Torrent Manager",
+        "inline_desc": "ℹ Click to view the parameters",
+        "inline_answer": "ℹ No changes",
+    }
 
     def stringTorrent(self, torrent):
         torrent_text = f"{self.strings['torrent_name']}{torrent.name} \n"
@@ -83,23 +85,39 @@ class TransmissionMod(loader.Module):
         return torrent_text
 
     def __init__(self):
-        self.config = loader.ModuleConfig("username", None, lambda m: self.strings("cfg_username", m),
-                                          "password", None, lambda m: self.strings("cfg_password", m),
-                                          "port", 9091, lambda m: self.strings("cfg_port", m),
-                                          "host", "127.0.0.1", lambda m: self.strings("cfg_host", m),
-                                          "protocol", "http", lambda m: self.strings("cfg_protocol", m),
-                                          "rpc", "/transmission/", lambda m: self.strings("cfg_rpc", m))
+        self.config = loader.ModuleConfig(
+            "username",
+            None,
+            lambda m: self.strings("cfg_username", m),
+            "password",
+            None,
+            lambda m: self.strings("cfg_password", m),
+            "port",
+            9091,
+            lambda m: self.strings("cfg_port", m),
+            "host",
+            "127.0.0.1",
+            lambda m: self.strings("cfg_host", m),
+            "protocol",
+            "http",
+            lambda m: self.strings("cfg_protocol", m),
+            "rpc",
+            "/transmission/",
+            lambda m: self.strings("cfg_rpc", m),
+        )
         self.name = self.strings["name"]
-        
+
         # Check Transmission Server
         self.is_ready = False
         try:
-            self.TransmissionClientUserBot = Client(host=self.config["host"], 
-                   port=self.config["port"], 
-                   username=self.config["username"], 
-                   password=self.config["password"],
-                   path=self.config["rpc"],
-                   protocol=self.config["protocol"])
+            self.TransmissionClientUserBot = Client(
+                host=self.config["host"],
+                port=self.config["port"],
+                username=self.config["username"],
+                password=self.config["password"],
+                path=self.config["rpc"],
+                protocol=self.config["protocol"],
+            )
             self.is_ready = True
         except TransmissionConnectError:
             pass
@@ -107,7 +125,6 @@ class TransmissionMod(loader.Module):
     async def client_ready(self, client, db):
         self._client = client
         self._me = await client.get_me(True)
-
 
     @loader.unrestricted
     @loader.ratelimit
@@ -136,48 +153,75 @@ class TransmissionMod(loader.Module):
             await asyncio.sleep(5)
             await message.delete()
 
-
     @loader.unrestricted
     @loader.ratelimit
     async def tdownloadcmd(self, message):
         """Download Torrent file"""
 
         reply, args = await message.get_reply_message(), utils.get_args_raw(message)
-        if reply:
-            if reply.media.document.mime_type == 'application/x-bittorrent':
-                path = await self._client.download_media(reply.media, "scam.torrent")
-                torrent = self.TransmissionClientUserBot.add_torrent("file://scam.torrent", download_dir=args if args else None)
+        if reply and reply.media.document.mime_type == "application/x-bittorrent":
+            path = await self._client.download_media(reply.media, "scam.torrent")
+            torrent = self.TransmissionClientUserBot.add_torrent(
+                "file://scam.torrent", download_dir=args or None
+            )
 
-                kb = [
-                    [{"text": self.strings['kb_update'], "callback": self.inline_update_torrent, "args": [torrent.id]}],
-                    [{"text": self.strings['kb_start'], "callback": self.inline__start, "args": [torrent.id]},
-                     {"text": self.strings['kb_stop'], "callback": self.inline__stop, "args": [torrent.id]}],
-                    [{"text": self.strings['kb_delete_data'], "callback": self.inline__delete, "args": [torrent.id, True]},
-                     {"text": self.strings['kb_delete'], "callback": self.inline__delete, "args": [torrent.id, False]}],
-                    [{"text": self.strings['kb_close'], "callback": self.inline__close}],
-                ]
+            kb = [
+                [
+                    {
+                        "text": self.strings["kb_update"],
+                        "callback": self.inline_update_torrent,
+                        "args": [torrent.id],
+                    }
+                ],
+                [
+                    {
+                        "text": self.strings["kb_start"],
+                        "callback": self.inline__start,
+                        "args": [torrent.id],
+                    },
+                    {
+                        "text": self.strings["kb_stop"],
+                        "callback": self.inline__stop,
+                        "args": [torrent.id],
+                    },
+                ],
+                [
+                    {
+                        "text": self.strings["kb_delete_data"],
+                        "callback": self.inline__delete,
+                        "args": [torrent.id, True],
+                    },
+                    {
+                        "text": self.strings["kb_delete"],
+                        "callback": self.inline__delete,
+                        "args": [torrent.id, False],
+                    },
+                ],
+                [{"text": self.strings["kb_close"], "callback": self.inline__close}],
+            ]
 
-                await self.inline.form(
-                    self.stringTorrent(self.TransmissionClientUserBot.get_torrent(torrent.id)),
-                    message=message,
-                    reply_markup=kb,
-                    always_allow=self._client.dispatcher.security._owner,
-                )
+            await self.inline.form(
+                self.stringTorrent(
+                    self.TransmissionClientUserBot.get_torrent(torrent.id)
+                ),
+                message=message,
+                reply_markup=kb,
+                always_allow=self._client.dispatcher.security._owner,
+            )
 
     async def transmission_inline_handler(self, query: GeekInlineQuery) -> None:
         """
         General info (Inline)
         """
         args = query.args
-        param = {"list": "List of 10 torrents",
-                 "search": "Search torrents by name"
-        }
+        param = {"list": "List of 10 torrents", "search": "Search torrents by name"}
         param_text = "<b>Available parameters: </b>\n"
         for item in param:
             param_text += f"⦁ {item} - {param[item]}\n"
 
         if not args:
-            await query.answer([
+            await query.answer(
+                [
                     InlineQueryResultArticle(
                         id=1,
                         title=self.strings["inline_title"],
@@ -189,24 +233,41 @@ class TransmissionMod(loader.Module):
                         thumb_width=128,
                         thumb_height=128,
                     )
-                ], cache_time=0)
+                ],
+                cache_time=0,
+            )
             return
 
         if "list" in args:
             kb_torrent_list = []
             for torrent in self.TransmissionClientUserBot.get_torrents():
-                
+
                 torrent_markup = InlineKeyboardMarkup(row_width=3)
                 torrent_markup.insert(
-                    InlineKeyboardButton(self.strings['kb_update'], callback_data="cake_update" + str(torrent.id)),
+                    InlineKeyboardButton(
+                        self.strings["kb_update"],
+                        callback_data="cake_update" + str(torrent.id),
+                    ),
                 )
                 torrent_markup.add(
-                    InlineKeyboardButton(self.strings['kb_start'], callback_data="cake_start" + str(torrent.id)),
-                    InlineKeyboardButton(self.strings['kb_stop'], callback_data="cake_stop" + str(torrent.id))
+                    InlineKeyboardButton(
+                        self.strings["kb_start"],
+                        callback_data="cake_start" + str(torrent.id),
+                    ),
+                    InlineKeyboardButton(
+                        self.strings["kb_stop"],
+                        callback_data="cake_stop" + str(torrent.id),
+                    ),
                 )
                 torrent_markup.add(
-                    InlineKeyboardButton(self.strings['kb_delete_data'], callback_data="cake_delete" + str(torrent.id)),
-                    InlineKeyboardButton(self.strings['kb_delete'], callback_data="cake_remove" + str(torrent.id))
+                    InlineKeyboardButton(
+                        self.strings["kb_delete_data"],
+                        callback_data="cake_delete" + str(torrent.id),
+                    ),
+                    InlineKeyboardButton(
+                        self.strings["kb_delete"],
+                        callback_data="cake_remove" + str(torrent.id),
+                    ),
                 )
 
                 kb_torrent_list.append(
@@ -215,35 +276,54 @@ class TransmissionMod(loader.Module):
                         title=torrent.name,
                         description=self.strings["inline_desc"],
                         input_message_content=InputTextMessageContent(
-                            self.stringTorrent(self.TransmissionClientUserBot.get_torrent(torrent.id)), "HTML", disable_web_page_preview=True
+                            self.stringTorrent(
+                                self.TransmissionClientUserBot.get_torrent(torrent.id)
+                            ),
+                            "HTML",
+                            disable_web_page_preview=True,
                         ),
                         reply_markup=torrent_markup,
                     )
                 )
                 if len(kb_torrent_list) == 10:
                     break
-            
+
             await query.answer(kb_torrent_list[:10], cache_time=0)
             return
-        
+
         if "search" in args:
-            search_arg = " ".join(args.split()[1:]) # transmission search BlaBlaBla
+            search_arg = " ".join(args.split()[1:])  # transmission search BlaBlaBla
             kb_torrent_list = []
             for torrent in self.TransmissionClientUserBot.get_torrents():
                 if search_arg in torrent.name:
 
                     torrent_markup = InlineKeyboardMarkup(row_width=3)
-                    
+
                     torrent_markup.insert(
-                        InlineKeyboardButton(self.strings['kb_update'], callback_data="cake_update" + str(torrent.id)),
+                        InlineKeyboardButton(
+                            self.strings["kb_update"],
+                            callback_data="cake_update" + str(torrent.id),
+                        ),
                     )
                     torrent_markup.add(
-                        InlineKeyboardButton(self.strings['kb_start'], callback_data="cake_start" + str(torrent.id)),
-                        InlineKeyboardButton(self.strings['kb_stop'], callback_data="cake_stop" + str(torrent.id))
+                        InlineKeyboardButton(
+                            self.strings["kb_start"],
+                            callback_data="cake_start" + str(torrent.id),
+                        ),
+                        InlineKeyboardButton(
+                            self.strings["kb_stop"],
+                            callback_data="cake_stop" + str(torrent.id),
+                        ),
                     )
                     torrent_markup.add(
-                        InlineKeyboardButton(self.strings['kb_delete_data'], callback_data="cake_delete" + str(torrent.id)),
-                        InlineKeyboardButton(self.strings['kb_delete'], callback_data="cake_remove" + str(torrent.id))
+                        InlineKeyboardButton(
+                            self.strings["kb_delete_data"],
+                            callback_data="cake_delete" + str(torrent.id),
+                        ),
+                        InlineKeyboardButton(
+                            self.strings["kb_delete"],
+                            callback_data="cake_remove" + str(torrent.id),
+                        ),
                     )
 
                     kb_torrent_list.append(
@@ -252,46 +332,80 @@ class TransmissionMod(loader.Module):
                             title=torrent.name,
                             description=self.strings["inline_desc"],
                             input_message_content=InputTextMessageContent(
-                                self.stringTorrent(self.TransmissionClientUserBot.get_torrent(torrent.id)), "HTML", disable_web_page_preview=True
+                                self.stringTorrent(
+                                    self.TransmissionClientUserBot.get_torrent(
+                                        torrent.id
+                                    )
+                                ),
+                                "HTML",
+                                disable_web_page_preview=True,
                             ),
                             reply_markup=torrent_markup,
                         )
                     )
-            
-            return await query.answer(kb_torrent_list[:10], cache_time=0)
-            
 
-    
-    # Inline button handler 
+            return await query.answer(kb_torrent_list[:10], cache_time=0)
+
+    # Inline button handler
     async def inline__close(self, call) -> None:
         await call.delete()
 
     async def inline_update_torrent(self, call, torrent_id) -> None:
         kb = [
-            [{"text": self.strings['kb_update'], "callback": self.inline_update_torrent, "args": [torrent_id]}],
-            [{"text": self.strings['kb_start'], "callback": self.inline__start, "args": [torrent_id]},
-             {"text": self.strings['kb_stop'], "callback": self.inline__stop, "args": [torrent_id]}],
-            [{"text": self.strings['kb_delete_data'], "callback": self.inline__delete, "args": [torrent_id, True]},
-             {"text": self.strings['kb_delete'], "callback": self.inline__delete, "args": [torrent_id, False]}],
-            [{"text": self.strings['kb_close'], "callback": self.inline__close}],
+            [
+                {
+                    "text": self.strings["kb_update"],
+                    "callback": self.inline_update_torrent,
+                    "args": [torrent_id],
+                }
+            ],
+            [
+                {
+                    "text": self.strings["kb_start"],
+                    "callback": self.inline__start,
+                    "args": [torrent_id],
+                },
+                {
+                    "text": self.strings["kb_stop"],
+                    "callback": self.inline__stop,
+                    "args": [torrent_id],
+                },
+            ],
+            [
+                {
+                    "text": self.strings["kb_delete_data"],
+                    "callback": self.inline__delete,
+                    "args": [torrent_id, True],
+                },
+                {
+                    "text": self.strings["kb_delete"],
+                    "callback": self.inline__delete,
+                    "args": [torrent_id, False],
+                },
+            ],
+            [{"text": self.strings["kb_close"], "callback": self.inline__close}],
         ]
         try:
-            await call.edit(self.stringTorrent(self.TransmissionClientUserBot.get_torrent(torrent_id)), reply_markup=kb)
+            await call.edit(
+                self.stringTorrent(
+                    self.TransmissionClientUserBot.get_torrent(torrent_id)
+                ),
+                reply_markup=kb,
+            )
         except KeyError:
-            await call.edit(self.strings['torrent_error'])
+            await call.edit(self.strings["torrent_error"])
 
     async def inline__start(self, call, torrent_id) -> None:
         self.TransmissionClientUserBot.get_torrent(torrent_id).start()
-        await call.answer(self.strings['answer_start'])
-    
+        await call.answer(self.strings["answer_start"])
+
     async def inline__stop(self, call, torrent_id) -> None:
         self.TransmissionClientUserBot.get_torrent(torrent_id).stop()
-        await call.answer(self.strings['answer_stop'])
+        await call.answer(self.strings["answer_stop"])
 
     async def inline__delete(self, call, torrent_id, delete_data) -> None:
         self.TransmissionClientUserBot.remove_torrent(torrent_id, delete_data)
-        await call.answer(self.strings['answer_delete'])
-
+        await call.answer(self.strings["answer_delete"])
 
     # Callback buttons (for Inline search)
     async def button_callback_handler(self, call: CallbackQuery) -> None:
@@ -305,41 +419,67 @@ class TransmissionMod(loader.Module):
 
             torrent_markup = InlineKeyboardMarkup(row_width=3)
             torrent_markup.insert(
-                InlineKeyboardButton(self.strings['kb_update'], callback_data="cake_update" + str(call.data[11:])),
+                InlineKeyboardButton(
+                    self.strings["kb_update"],
+                    callback_data="cake_update" + str(call.data[11:]),
+                ),
             )
             torrent_markup.add(
-                InlineKeyboardButton(self.strings['kb_start'], callback_data="cake_start" + str(call.data[10:])),
-                InlineKeyboardButton(self.strings['kb_stop'], callback_data="cake_stop" + str(call.data[9:]))
+                InlineKeyboardButton(
+                    self.strings["kb_start"],
+                    callback_data="cake_start" + str(call.data[10:]),
+                ),
+                InlineKeyboardButton(
+                    self.strings["kb_stop"],
+                    callback_data="cake_stop" + str(call.data[9:]),
+                ),
             )
             torrent_markup.add(
-                InlineKeyboardButton(self.strings['kb_delete_data'], callback_data="cake_detete" + str(call.data[11:])),
-                InlineKeyboardButton(self.strings['kb_delete'], callback_data="cake_remove" + str(call.data[11:]))
+                InlineKeyboardButton(
+                    self.strings["kb_delete_data"],
+                    callback_data="cake_detete" + str(call.data[11:]),
+                ),
+                InlineKeyboardButton(
+                    self.strings["kb_delete"],
+                    callback_data="cake_remove" + str(call.data[11:]),
+                ),
             )
 
             try:
-                torrent = self.TransmissionClientUserBot.get_torrent(int(call.data[11:]))
-                await self.inline.bot.edit_message_text(self.stringTorrent(torrent), reply_markup=torrent_markup, inline_message_id=call.inline_message_id, parse_mode="HTML")
+                torrent = self.TransmissionClientUserBot.get_torrent(
+                    int(call.data[11:])
+                )
+                await self.inline.bot.edit_message_text(
+                    self.stringTorrent(torrent),
+                    reply_markup=torrent_markup,
+                    inline_message_id=call.inline_message_id,
+                    parse_mode="HTML",
+                )
             except KeyError:
-                await self.inline.bot.edit_message_text(self.strings['torrent_error'], inline_message_id=call.inline_message_id, parse_mode="HTML")
+                await self.inline.bot.edit_message_text(
+                    self.strings["torrent_error"],
+                    inline_message_id=call.inline_message_id,
+                    parse_mode="HTML",
+                )
             except MessageNotModified:
                 await call.answer(self.strings["inline_answer"])
-        
+
         # Start
         if call.data[:10] == "cake_start":
             self.TransmissionClientUserBot.get_torrent(int(call.data[11:])).start()
-            return await call.answer(self.strings['answer_start'])
+            return await call.answer(self.strings["answer_start"])
 
         # Stop
         if call.data[:9] == "cake_stop":
             self.TransmissionClientUserBot.get_torrent(int(call.data[11:])).stop()
-            return await call.answer(self.strings['answer_stop'])
+            return await call.answer(self.strings["answer_stop"])
 
         # Delete torrent with data
         if call.data[:11] == "cake_delete":
             self.TransmissionClientUserBot.remove_torrent(int(call.data[11:]), True)
-            return await call.answer(self.strings['answer_delete'])
+            return await call.answer(self.strings["answer_delete"])
 
         # Just delete torrent
         if call.data[:11] == "cake_remove":
             self.TransmissionClientUserBot.remove_torrent(int(call.data[11:]), False)
-            return await call.answer(self.strings['answer_delete'])
+            return await call.answer(self.strings["answer_delete"])

@@ -63,10 +63,13 @@ class InlineMoebooruMod(loader.Module):
 
     def string_builder(self, json):
         string = f"Tags : {quote_html(json['tags'])}\n"
-        string += f"©️ : {quote_html(json['author']) if json['author'] else 'No author'}\n"
-        string += f"🔗 : {quote_html(json['source']) if json['source'] else 'No source'}\n\n"
+        string += (
+            f"©️ : {quote_html(json['author']) if json['author'] else 'No author'}\n"
+        )
+        string += (
+            f"🔗 : {quote_html(json['source']) if json['source'] else 'No source'}\n\n"
+        )
         string += f"🆔 : https://yande.re/post/show/{json['id']}"
-
 
         return string
 
@@ -116,7 +119,7 @@ class InlineMoebooruMod(loader.Module):
         reply = await message.get_reply_message()
         args = utils.get_args(message)
         if reply and args:
-            yandere_id = reply.raw_text.split("🆔")[1].split('/')[5]
+            yandere_id = reply.raw_text.split("🆔")[1].split("/")[5]
 
             params = {"id": yandere_id, "score": args[0]}
             async with aiohttp.ClientSession() as session:
@@ -141,10 +144,34 @@ class InlineMoebooruMod(loader.Module):
         elif reply:
             yandere_id = reply.raw_text.split("🆔")[1][2:]
             kb = [
-                [{"text": "Bad", "callback": self.inline__vote, "args": [-1, yandere_id]}],
-                [{"text": "Good", "callback": self.inline__vote, "args": [1, yandere_id]}],
-                [{"text": "Great", "callback": self.inline__vote, "args": [2, yandere_id]}],
-                [{"text": "Favorite", "callback": self.inline__vote, "args": [3, yandere_id]}],
+                [
+                    {
+                        "text": "Bad",
+                        "callback": self.inline__vote,
+                        "args": [-1, yandere_id],
+                    }
+                ],
+                [
+                    {
+                        "text": "Good",
+                        "callback": self.inline__vote,
+                        "args": [1, yandere_id],
+                    }
+                ],
+                [
+                    {
+                        "text": "Great",
+                        "callback": self.inline__vote,
+                        "args": [2, yandere_id],
+                    }
+                ],
+                [
+                    {
+                        "text": "Favorite",
+                        "callback": self.inline__vote,
+                        "args": [3, yandere_id],
+                    }
+                ],
             ]
             await self.inline.form(
                 self.strings["vote_text"],
@@ -158,7 +185,6 @@ class InlineMoebooruMod(loader.Module):
         await asyncio.sleep(5)
         await message.delete()
 
-
     # Inline commands
     async def ylast_inline_handler(self, query: GeekInlineQuery) -> None:
         """
@@ -169,20 +195,19 @@ class InlineMoebooruMod(loader.Module):
             async with session.get(self.strings["url"]) as get:
                 arts = await get.json()
                 await session.close()
-        
-        inline_query = []
-        for art in arts:
-            inline_query.append(
-                InlineQueryResultPhoto(
-                    id=rand(20),
-                    title="Title",
-                    description="Description",
-                    caption=self.string_builder(art),
-                    thumb_url=art["preview_url"],  
-                    photo_url=art["sample_url"],
-                    parse_mode="html",
-                )
+
+        inline_query = [
+            InlineQueryResultPhoto(
+                id=rand(20),
+                title="Title",
+                description="Description",
+                caption=self.string_builder(art),
+                thumb_url=art["preview_url"],
+                photo_url=art["sample_url"],
+                parse_mode="html",
             )
+            for art in arts
+        ]
 
         await query.answer(
             inline_query,
@@ -199,20 +224,19 @@ class InlineMoebooruMod(loader.Module):
             async with session.get(self.strings["url"] + params) as get:
                 arts = await get.json()
                 await session.close()
-        
-        inline_query = []
-        for art in arts:
-            inline_query.append(
-                InlineQueryResultPhoto(
-                    id=rand(20),
-                    title="Title",
-                    description="Description",
-                    caption=self.string_builder(art),
-                    thumb_url=art["preview_url"],  
-                    photo_url=art["sample_url"],
-                    parse_mode="html",
-                )
+
+        inline_query = [
+            InlineQueryResultPhoto(
+                id=rand(20),
+                title="Title",
+                description="Description",
+                caption=self.string_builder(art),
+                thumb_url=art["preview_url"],
+                photo_url=art["sample_url"],
+                parse_mode="html",
             )
+            for art in arts
+        ]
 
         await query.answer(
             inline_query,
@@ -229,33 +253,31 @@ class InlineMoebooruMod(loader.Module):
         if not text:
             return
 
-
         params = "?tags=order:random " + text
         async with aiohttp.ClientSession() as session:
             async with session.get(self.strings["url"] + params) as get:
                 arts = await get.json()
                 await session.close()
-        
-        inline_query = []
-        for art in arts:
-            inline_query.append(
-                InlineQueryResultPhoto(
-                    id=rand(20),
-                    title="Title",
-                    description="Description",
-                    caption=self.string_builder(art),
-                    thumb_url=art["preview_url"],  
-                    photo_url=art["sample_url"],
-                    parse_mode="html",
-                )
+
+        inline_query = [
+            InlineQueryResultPhoto(
+                id=rand(20),
+                title="Title",
+                description="Description",
+                caption=self.string_builder(art),
+                thumb_url=art["preview_url"],
+                photo_url=art["sample_url"],
+                parse_mode="html",
             )
+            for art in arts
+        ]
 
         await query.answer(
             inline_query,
             cache_time=0,
         )
 
-    # Inline button handler 
+    # Inline button handler
     async def inline__close(self, call: "aiogram.types.CallbackQuery") -> None:
         await call.delete()
 

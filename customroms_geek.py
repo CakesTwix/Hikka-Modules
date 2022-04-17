@@ -62,48 +62,53 @@ class CustomRomsMod(loader.Module):
         "magisk_latest": "𝗟𝗮𝘁𝗲𝘀𝘁 𝗠𝗮𝗴𝗶𝘀𝗸 𝗥𝗲𝗹𝗲𝗮𝘀𝗲𝘀:",
         "app_by": "👤 by {}",
         "Stable": "⦁ 𝗦𝘁𝗮𝗯𝗹𝗲",
-        "Beta": "⦁ 𝗕𝗲𝘁𝗮", 
+        "Beta": "⦁ 𝗕𝗲𝘁𝗮",
         "Canary": "⦁ 𝗖𝗮𝗻𝗮𝗿𝘆",
         "md5": "<b>MD5: </b>",
         "count": "<b>Downloads count: </b>",
-        "customAvbSupported": "<b>Custom Avb Supported:</b> "
+        "customAvbSupported": "<b>Custom Avb Supported:</b> ",
     }
 
-    magisk_dict = {"topjohnwu": [{"Stable": "master/stable.json", 
-                                      "Beta": "master/stable.json", 
-                                      "Canary": "master/stable.json"},
-                                      "https://raw.githubusercontent.com/topjohnwu/magisk-files/"],
-                   "vvb2060": [{"Stable": "master/lite.json",
-                                "Canary": "alpha/alpha.json"},
-                                "https://raw.githubusercontent.com/vvb2060/magisk_files/"],
-                    "TheHitMan7": [{"Stable": "stable.json",
-                                    "Beta": "beta.json", 
-                                    "Canary": "canary.json"},
-                                    "https://raw.githubusercontent.com/TheHitMan7/Magisk-Files/master/configs/"]
-        }
+    magisk_dict = {
+        "topjohnwu": [
+            {
+                "Stable": "master/stable.json",
+                "Beta": "master/stable.json",
+                "Canary": "master/stable.json",
+            },
+            "https://raw.githubusercontent.com/topjohnwu/magisk-files/",
+        ],
+        "vvb2060": [
+            {"Stable": "master/lite.json", "Canary": "alpha/alpha.json"},
+            "https://raw.githubusercontent.com/vvb2060/magisk_files/",
+        ],
+        "TheHitMan7": [
+            {"Stable": "stable.json", "Beta": "beta.json", "Canary": "canary.json"},
+            "https://raw.githubusercontent.com/TheHitMan7/Magisk-Files/master/configs/",
+        ],
+    }
 
     twrp_api = "https://dl.twrp.me/"
     no_codename = [
-                    InlineQueryResultArticle(
-                        id=rand(20),
-                        title=strings["write_codename"],
-                        description=strings["latest_releases_no_format"],
-                        input_message_content=InputTextMessageContent(
-                            strings["no_codename"], "HTML", disable_web_page_preview=True
-                        ),
-                        thumb_url="https://img.icons8.com/android/128/26e07f/android.png",
-                        thumb_width=128,
-                        thumb_height=128,
-                    )
-                ]
+        InlineQueryResultArticle(
+            id=rand(20),
+            title=strings["write_codename"],
+            description=strings["latest_releases_no_format"],
+            input_message_content=InputTextMessageContent(
+                strings["no_codename"], "HTML", disable_web_page_preview=True
+            ),
+            thumb_url="https://img.icons8.com/android/128/26e07f/android.png",
+            thumb_width=128,
+            thumb_height=128,
+        )
+    ]
     # ROMs
     @loader.unrestricted
     @loader.ratelimit
     async def sakuracmd(self, message):
         """Project Sakura"""
 
-        args = utils.get_args(message)
-        if args:
+        if args := utils.get_args(message):
             device = args[0].lower()
             data = get(
                 "https://raw.githubusercontent.com/ProjectSakura/OTA/11/devices.json"
@@ -116,23 +121,20 @@ class CustomRomsMod(loader.Module):
                     await utils.answer(message, releases)
                     return
             await utils.answer(message, f"{self.strings['no_device']}")
-            await asyncio.sleep(5)
-            await message.delete()
         else:
             await utils.answer(message, f"{self.strings['no_codename']}")
-            await asyncio.sleep(5)
-            await message.delete()
+        await asyncio.sleep(5)
+        await message.delete()
 
     @loader.unrestricted
     @loader.ratelimit
     async def dotoscmd(self, message):
         """DotOS"""
-        args = utils.get_args(message)
-        if args:
+        if args := utils.get_args(message):
             device = args[0].lower()
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    "https://api.droidontime.com/api/ota/{}".format(device)
+                    f"https://api.droidontime.com/api/ota/{device}"
                 ) as get:
                     if get.ok:
                         data = await get.json()
@@ -159,8 +161,7 @@ class CustomRomsMod(loader.Module):
     @loader.ratelimit
     async def twrpcmd(self, message):
         """TWRP Devices"""
-        args = utils.get_args(message)
-        if args:
+        if args := utils.get_args(message):
             device = args[0].lower()
             url = get(f"{self.twrp_api}{device}/")
 
@@ -187,8 +188,7 @@ class CustomRomsMod(loader.Module):
     async def shrpcmd(self, message):
         """SHRP Devices"""
 
-        args = utils.get_args(message)
-        if args:
+        if args := utils.get_args(message):
             device = args[0].lower()
             data = get(
                 "https://raw.githubusercontent.com/SHRP-Devices/device_data/master/deviceData.json"
@@ -209,8 +209,7 @@ class CustomRomsMod(loader.Module):
     @loader.ratelimit
     async def pbrpcmd(self, message):
         """PBRP Devices"""
-        args = utils.get_args(message)
-        if args:
+        if args := utils.get_args(message):
             device = args[0].lower()
             async with aiohttp.ClientSession() as session:
                 async with session.get(
@@ -294,9 +293,7 @@ class CustomRomsMod(loader.Module):
         arch_dict = {}
         version_text = "<b>Avilable versions</b> :\n"
         for arch in opengapps_list["archs"]:
-            apis_list = []
-            for apis in opengapps_list["archs"][arch]["apis"]:
-                apis_list.append(str(apis))
+            apis_list = [str(apis) for apis in opengapps_list["archs"][arch]["apis"]]
             arch_dict[arch] = apis_list
             version_text += f"<b>{arch}</b> : {', '.join(apis_list)}\n"
 
@@ -357,6 +354,7 @@ class CustomRomsMod(loader.Module):
                     )
                     markup = None
             await query.answer(archs_inline, cache_time=0)
+
     # https://img.icons8.com/fluency/48/26e07f/android-os.png
     async def aex_inline_handler(self, query: GeekInlineQuery) -> None:
         """
@@ -368,42 +366,48 @@ class CustomRomsMod(loader.Module):
         if not device_codename:
             await query.answer(self.no_codename, cache_time=0)
             return
-        
+
         async with aiohttp.ClientSession() as session:
-                async with session.get("https://api.aospextended.com/devices/") as get:
-                    devices_json = await get.json()
-                
-                for device in devices_json:
-                    if device["codename"] == device_codename:
-                        inline_query = []
-                        for version in device['supported_versions']:
-                            releases = f"Latest AOSP Extended for {device['brand']} {device['name']} ({device['codename']}) \n"
-                            async with session.get("https://api.aospextended.com/builds/{}/{}".format(device_codename,version['version_code'])) as get:
-                                version_json = await get.json()
-                            if "error" not in version_json:
+            async with session.get("https://api.aospextended.com/devices/") as get:
+                devices_json = await get.json()
 
-                                releases += f"{self.strings['app_by'].format(version['maintainer_name'])} \n"
-                                releases += f"💬 {hlink('Telegram Chat', version['tg_link'])} | {hlink('XDA', version['xda_thread'])} | {hlink('XDA Maintainer', version['maintainer_url'])} \n"
-                                releases += f"{self.strings['download']} {hlink(version_json[0]['file_name'], version_json[0]['download_link'])} \n\n"
+            for device in devices_json:
+                if device["codename"] == device_codename:
+                    inline_query = []
+                    for version in device["supported_versions"]:
+                        releases = f"Latest AOSP Extended for {device['brand']} {device['name']} ({device['codename']}) \n"
+                        async with session.get(
+                            f"https://api.aospextended.com/builds/{device_codename}/{version['version_code']}"
+                        ) as get:
+                            version_json = await get.json()
+                        if "error" not in version_json:
 
-                                releases += f"{self.strings['md5']}{version_json[0]['md5']} \n"
-                                releases += f"{self.strings['count']}{version_json[0]['downloads_count']} \n"
-                                releases += f"{self.strings['customAvbSupported']} {'Yes' if version_json[0]['isCustomAvbSupported'] else 'No'}"
+                            releases += f"{self.strings['app_by'].format(version['maintainer_name'])} \n"
+                            releases += f"💬 {hlink('Telegram Chat', version['tg_link'])} | {hlink('XDA', version['xda_thread'])} | {hlink('XDA Maintainer', version['maintainer_url'])} \n"
+                            releases += f"{self.strings['download']} {hlink(version_json[0]['file_name'], version_json[0]['download_link'])} \n\n"
 
-                                inline_query.append(
-                                    InlineQueryResultArticle(
-                                        id=rand(50),
-                                        title=version['version_name'],
-                                        description=self.strings["app_by"].format(version["maintainer_name"]),
-                                        input_message_content=InputTextMessageContent(
-                                            releases,
-                                            "HTML",
-                                            disable_web_page_preview=True,
-                                        ),
-                                    )
+                            releases += (
+                                f"{self.strings['md5']}{version_json[0]['md5']} \n"
+                            )
+                            releases += f"{self.strings['count']}{version_json[0]['downloads_count']} \n"
+                            releases += f"{self.strings['customAvbSupported']} {'Yes' if version_json[0]['isCustomAvbSupported'] else 'No'}"
+
+                            inline_query.append(
+                                InlineQueryResultArticle(
+                                    id=rand(50),
+                                    title=version["version_name"],
+                                    description=self.strings["app_by"].format(
+                                        version["maintainer_name"]
+                                    ),
+                                    input_message_content=InputTextMessageContent(
+                                        releases,
+                                        "HTML",
+                                        disable_web_page_preview=True,
+                                    ),
                                 )
-                        await session.close()
-                        await query.answer(inline_query, cache_time=0)
+                            )
+                    await session.close()
+                    await query.answer(inline_query, cache_time=0)
 
     async def dotos_inline_handler(self, query: GeekInlineQuery) -> None:
         """
@@ -420,7 +424,7 @@ class CustomRomsMod(loader.Module):
             device = text
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    "https://api.droidontime.com/api/ota/{}".format(device)
+                    f"https://api.droidontime.com/api/ota/{device}"
                 ) as get:
                     if get.ok:
                         data = await get.json()
@@ -449,23 +453,27 @@ class CustomRomsMod(loader.Module):
 
             vanilla_markup = InlineKeyboardMarkup(row_width=3)
             gapps_markup = InlineKeyboardMarkup(row_width=3)
-            for releases in data['releases']:
-                if releases['type'] == "vanilla":
+            for releases in data["releases"]:
+                if releases["type"] == "vanilla":
                     vanilla_markup.insert(
-                            InlineKeyboardButton(releases["version"], url=releases["url"])
-                        )
+                        InlineKeyboardButton(releases["version"], url=releases["url"])
+                    )
                 else:
                     gapps_markup.insert(
-                            InlineKeyboardButton(releases["version"], url=releases["url"])
-                        )
+                        InlineKeyboardButton(releases["version"], url=releases["url"])
+                    )
 
             about_info = f"<b>DotOS for {data['brandName']} {data['deviceName']}</b> (<code>{data['codename']}</code>) \n"
             about_info += f"👤 : {hlink(data['maintainerInfo']['name'], data['maintainerInfo']['profileURL'])} \n"
             about_info += f"🆚 : {data['latestVersion']} \n"
-            about_info += self.strings['not_updating'] if data['discontinued'] else self.strings['updated']
+            about_info += (
+                self.strings["not_updating"]
+                if data["discontinued"]
+                else self.strings["updated"]
+            )
             about_info += f"\n🔗 : {hlink('XDA',data['links']['xda'])} / {hlink('Telegram',data['links']['telegram'])} \n"
 
-            await query.answer( # About, Vanilla, Gapps
+            await query.answer(  # About, Vanilla, Gapps
                 [
                     InlineQueryResultArticle(
                         id=rand(20),
@@ -485,29 +493,33 @@ class CustomRomsMod(loader.Module):
                         title=self.strings["vanilla_version"],
                         description=self.strings["latest_releases"].format("DotOS"),
                         input_message_content=InputTextMessageContent(
-                            self.strings["latest_releases_device"].format("DotOS", "Vanilla", device),
+                            self.strings["latest_releases_device"].format(
+                                "DotOS", "Vanilla", device
+                            ),
                             "HTML",
                             disable_web_page_preview=True,
                         ),
                         thumb_url="https://img.icons8.com/android/128/26e07f/forward.png",
                         thumb_width=128,
                         thumb_height=128,
-                        reply_markup=vanilla_markup
+                        reply_markup=vanilla_markup,
                     ),
                     InlineQueryResultArticle(
                         id=rand(20),
                         title=self.strings["gapps_version"],
                         description=self.strings["latest_releases"].format("DotOS"),
                         input_message_content=InputTextMessageContent(
-                            self.strings["latest_releases_device"].format("DotOS", "GApps", device),
+                            self.strings["latest_releases_device"].format(
+                                "DotOS", "GApps", device
+                            ),
                             "HTML",
                             disable_web_page_preview=True,
                         ),
                         thumb_url="https://img.icons8.com/android/128/26e07f/forward.png",
                         thumb_width=128,
                         thumb_height=128,
-                        reply_markup=gapps_markup
-                    )
+                        reply_markup=gapps_markup,
+                    ),
                 ],
                 cache_time=0,
             )
@@ -520,13 +532,17 @@ class CustomRomsMod(loader.Module):
         inline_query = []
         latest_releases = f"<code><i>{self.strings['magisk_latest']}</i></code>\n\n"
 
-        for magisk_author in self.magisk_dict: # topjohnwu vvb2060
+        for magisk_author in self.magisk_dict:  # topjohnwu vvb2060
             text_type = ""
-            for magisk_type in self.magisk_dict[magisk_author][0]: # List(Stable, Beta, etc) by author
+            for magisk_type in self.magisk_dict[magisk_author][
+                0
+            ]:  # List(Stable, Beta, etc) by author
 
                 base_url = self.magisk_dict[magisk_author][1]
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(base_url + self.magisk_dict[magisk_author][0][magisk_type]) as get:
+                    async with session.get(
+                        base_url + self.magisk_dict[magisk_author][0][magisk_type]
+                    ) as get:
                         data = await get.json(content_type=None)
 
                 text_type += f'{self.strings[magisk_type]}: {hlink("APK v" + data["magisk"]["version"], data["magisk"]["link"])} | {hlink("Changelog", data["magisk"]["note"])} \n'
@@ -537,13 +553,14 @@ class CustomRomsMod(loader.Module):
                     title=self.strings["magisk_latest"],
                     description=self.strings["app_by"].format(magisk_author),
                     input_message_content=InputTextMessageContent(
-                        latest_releases + text_type, "HTML", disable_web_page_preview=True
+                        latest_releases + text_type,
+                        "HTML",
+                        disable_web_page_preview=True,
                     ),
                     thumb_url="https://upload.wikimedia.org/wikipedia/commons/b/b8/Magisk_Logo.png",
                     thumb_width=128,
                     thumb_height=128,
                 )
             )
-
 
         await query.answer(inline_query, cache_time=0)

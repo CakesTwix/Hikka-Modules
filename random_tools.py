@@ -31,18 +31,17 @@ class RToolsMod(loader.Module):
         "name": "Tools",
         "no_found": "No found",
         "no_args": "Not found args, pls check help",
-        "general_error": "Oh no, cringe, error"
+        "general_error": "Oh no, cringe, error",
     }
 
     @loader.unrestricted
     @loader.ratelimit
     async def mac2vendorcmd(self, message):
         """Get vendor name by mac"""
-        args = utils.get_args(message)
-        if args:
+        if args := utils.get_args(message):
             mac = args[0].lower()
             async with aiohttp.ClientSession() as session:
-                async with session.get("http://api.macvendors.com/" + mac) as get:
+                async with session.get(f"http://api.macvendors.com/{mac}") as get:
                     if get.ok:
                         await utils.answer(message, await get.text())
                     else:
@@ -58,14 +57,13 @@ class RToolsMod(loader.Module):
     @loader.ratelimit
     async def oneptcmd(self, message):
         """A simple URL shortener (1pt.co)"""
-        args = utils.get_args(message)
-        if args:
+        if args := utils.get_args(message):
             mac = args[0].lower()
             async with aiohttp.ClientSession() as session:
-                async with session.get("https://api.1pt.co/addURL?long=" + mac) as get:
+                async with session.get(f"https://api.1pt.co/addURL?long={mac}") as get:
                     if get.ok:
                         answer_json = await get.json()
-                        await utils.answer(message, "1pt.co/" + answer_json['short'])
+                        await utils.answer(message, "1pt.co/" + answer_json["short"])
                     else:
                         await utils.answer(message, self.strings["general_error"])
                         await asyncio.sleep(5)
@@ -79,8 +77,7 @@ class RToolsMod(loader.Module):
     @loader.ratelimit
     async def npcmd(self, message):
         """Нова Пошта"""
-        args = utils.get_args(message)
-        if args:
+        if args := utils.get_args(message):
             document_number = args[0].lower()
 
             data = {
@@ -111,4 +108,3 @@ class RToolsMod(loader.Module):
                 caption += f"\nЦена доставки: {item['DocumentCost']} грн."
 
             await utils.answer(message, caption)
-        

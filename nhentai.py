@@ -3,7 +3,7 @@
     █▀▀ ▄▀█ █▄▀ █▀▀ █▀ ▀█▀ █░█░█ █ ▀▄▀
     █▄▄ █▀█ █░█ ██▄ ▄█ ░█░ ▀▄▀▄▀ █ █░█
 
-    Copyleft 2022 t.me/CakesTwix                                                            
+    # Copyleft 2022 t.me/CakesTwix                                                            
     This program is free software; you can redistribute it and/or modify 
 
 """
@@ -31,10 +31,7 @@ def StringBuilder(Hentai):
     link = Hentai.url
     total_pages = Hentai.num_pages
     total_favorites = Hentai.num_favorites
-    tags = ""
-    for tag in Hentai.tag:
-        tags += f"{tag.name} "
-
+    tags = "".join(f"{tag.name} " for tag in Hentai.tag)
     text = f"<a href={link}>{eng_name}</a> [{id_nh}]\n\n"
     text += f"{tags} \n"
     text += f"❤️ {total_favorites} | 📄 {total_pages}"
@@ -43,8 +40,7 @@ def StringBuilder(Hentai):
 
 def ListHentaiBuilder(Hentais):
     text = ""
-    i = 1
-    for Hentai in Hentais:
+    for i, Hentai in enumerate(Hentais, start=1):
         id_nh = Hentai.id
         eng_name = Hentai.title()
         link = Hentai.url
@@ -53,7 +49,6 @@ def ListHentaiBuilder(Hentais):
 
         text += f"{i}: <a href={link}>{eng_name}</a> [{id_nh}] / "
         text += f"❤️ {total_favorites} | 📄 {total_pages} \n"
-        i += 1
     return text
 
 
@@ -81,8 +76,7 @@ class NHentaiMod(loader.Module):
     @loader.ratelimit
     async def nhtagcmd(self, message):
         """Search hentai manga by tag"""
-        args = utils.get_args(message)
-        if args:
+        if args := utils.get_args(message):
             hentai_info = Utils.search_by_query(args)
             text = ListHentaiBuilder(hentai_info)
 

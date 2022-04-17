@@ -38,11 +38,10 @@ class TikTokMod(loader.Module):
         if not args:
             return await utils.answer(message, self.strings["no_args"])
 
-        r = await message.client.inline_query('tikdobot', args)
+        r = await message.client.inline_query("tikdobot", args)
         await message.client.send_file(message.to_id, r[1].result.content.url)
         await message.delete()
 
-    
     @loader.unrestricted
     @loader.ratelimit
     async def dttcmd(self, message):
@@ -51,11 +50,6 @@ class TikTokMod(loader.Module):
         if not args:
             return await utils.answer(message, self.strings["no_args"])
 
-        r = await message.client.inline_query('tikdobot', args)
+        r = await message.client.inline_query("tikdobot", args)
         await message.client.send_file(message.to_id, r[0].result.content.url)
         await message.delete()
-
-
-
-
-

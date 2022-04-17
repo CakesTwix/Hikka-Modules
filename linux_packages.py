@@ -46,7 +46,7 @@ class LinuxPackagesMod(loader.Module):
         "no_packages": "<b>No packages</b>...",
     }
 
-    async def aurcmd(self, message):  # .aur spotify | .aur
+    async def aurcmd(self, message):
         """Arch User Repository"""
         args = utils.get_args_raw(message)
         if not args:
@@ -55,7 +55,7 @@ class LinuxPackagesMod(loader.Module):
 
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                "https://aur.archlinux.org/rpc/?v=5&type=search&arg={}".format(args)
+                f"https://aur.archlinux.org/rpc/?v=5&type=search&arg={args}"
             ) as get:
                 if get.ok:
                     packages = await get.json()
@@ -96,7 +96,7 @@ class LinuxPackagesMod(loader.Module):
         if _type == "AUR":
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]={}".format(Name)
+                    f"https://aur.archlinux.org/rpc/?v=5&type=info&arg[]={Name}"
                 ) as get:
                     if get.ok:
                         package = await get.json()
@@ -140,37 +140,38 @@ class LinuxPackagesMod(loader.Module):
         )
 
     async def inline__back(self, call: CallbackQuery, Name: str, _type: str) -> None:
-        if _type == "AUR":
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    "https://aur.archlinux.org/rpc/?v=5&type=search&arg={}".format(Name)
-                ) as get:
-                    if get.ok:
-                        packages = await get.json()
+        if _type != "AUR":
+            return
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                f"https://aur.archlinux.org/rpc/?v=5&type=search&arg={Name}"
+            ) as get:
+                if get.ok:
+                    packages = await get.json()
 
-                        i = 1
-                        reply_markup = []
-                        string = self.strings["string_list"].format("AUR")
-                        for package in packages["results"]:
-                            string += f"{i}. {package['Name']}(v{package['Version']})\n"
-                            reply_markup.append(
-                                {
-                                    "text": str(i),
-                                    "callback": self.inline__get_package,
-                                    "args": [package["Name"], "AUR", Name],
-                                }
-                            )
-
-                            if i >= 10:
-                                break
-
-                            i = i + 1
-
-                        await call.edit(
-                            text=string,
-                            reply_markup=chunks(reply_markup, 5),
-                            force_me=False,  # optional: Allow other users to access form (all)
+                    i = 1
+                    reply_markup = []
+                    string = self.strings["string_list"].format("AUR")
+                    for package in packages["results"]:
+                        string += f"{i}. {package['Name']}(v{package['Version']})\n"
+                        reply_markup.append(
+                            {
+                                "text": str(i),
+                                "callback": self.inline__get_package,
+                                "args": [package["Name"], "AUR", Name],
+                            }
                         )
-                    else:
-                        await utils.answer(message, self.strings["general_error"])
-                        return await asyncio.sleep(5)
+
+                        if i >= 10:
+                            break
+
+                        i = i + 1
+
+                    await call.edit(
+                        text=string,
+                        reply_markup=chunks(reply_markup, 5),
+                        force_me=False,  # optional: Allow other users to access form (all)
+                    )
+                else:
+                    await utils.answer(message, self.strings["general_error"])
+                    return await asyncio.sleep(5)
