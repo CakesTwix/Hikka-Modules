@@ -8,11 +8,13 @@
 
 """
 
-__version__ = (1, 0, 0)
+__version__ = (1, 0, 1)
 
 # requires: requests
 # meta pic: https://cdn-icons-png.flaticon.com/512/1005/1005340.png
 # meta developer: @shadow_geektg
+# scope: inline
+# scope: hikka_only
 
 import requests
 import random
