@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 1, 0)
+__version__ = (1, 1, 1)
 
 # requires: aiohttp
 # meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
@@ -160,7 +160,7 @@ class ImageBoardSenderMod(loader.Module):
 
     async def change_channel(self, call, channel_username) -> None:
         self.config["CONFIG_CHANNEL"] = channel_username
-        await call.edit(text="Успешно изменено", reply_markup=[self.btn[1]])
+        await call.edit(text="Успешно изменено", reply_markup=[{"text": self.strings['btn_menu_update'], "callback": self.update_channel_status}])
 
     async def update_channel_status(self, call) -> None:
         string = f"{self.strings['channel_status']} {self.strings['ok'] if await self.check_entity() else self.strings['no_ok']}\n"
