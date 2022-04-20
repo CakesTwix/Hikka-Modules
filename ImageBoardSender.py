@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 0, 0)
+__version__ = (1, 1, 0)
 
 # requires: aiohttp
 # meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
@@ -32,7 +32,15 @@ class ImageBoardSenderMod(loader.Module):
         "name": "ImageBoardSender",
         "no_chennel": "Channel does not exist",
         "ok": "Everything is okay",
-        "no_ok": "Everything not okay (not admin rights)",
+        "no_ok": "Everything not okay (maybe not admin rights)",
+        "channel_status": "<b>Channel Status</b>:",
+        "channel_username": "<b>Channel username</b>:",
+        "change_channel_username": "<b>Change the channel username</b>:",
+        "btn_menu_change": "✍️ Change username channel",
+        "btn_menu_change_input": "✍️ Enter new configuration value for this option",
+        "btn_menu_update": "Update",
+        "btn_menu_start": "Start",
+        "btn_menu_stop": "Stop",
     }
 
     rating = {"e": "Explicit 🔴", "q": "Questionable 🟡", "s": "Safe 🟢"}
@@ -49,10 +57,27 @@ class ImageBoardSenderMod(loader.Module):
         )
 
         self.entity = None
+        self.last_id = 0
+        self.status_loop = False
 
-    async def _init(self) -> None:
+    # Check channel rights
+    async def check_entity(self) -> bool:
         try:
-            self._task.cancel()
+            self.entity = await self._client.get_entity(self.config["CONFIG_CHANNEL"])
+        except ValueError:
+            self.entity = None
+            return False
+
+        if self.entity.admin_rights is None:
+            return False
+        elif self.entity.admin_rights.post_messages:
+            return True
+
+    # Just async init
+    async def _init(self) -> None:
+        await self.check_entity()
+        try:
+            self.loop__send_arts.stop()
         except Exception:
             pass
 
@@ -67,7 +92,8 @@ class ImageBoardSenderMod(loader.Module):
                     art_data = await get.json()
                     self.last_id = art_data[0]["id"]
 
-            self._task = asyncio.ensure_future(self.send_last_arts())
+            self.loop__send_arts.start()
+            self.status_loop = True
         except ValueError:
             pass
 
@@ -79,7 +105,7 @@ class ImageBoardSenderMod(loader.Module):
 
     async def on_unload(self) -> None:
         try:
-            self._task.cancel()
+            self.loop__send_arts.stop()
         except Exception:
             pass
 
@@ -97,6 +123,7 @@ class ImageBoardSenderMod(loader.Module):
         try:
             self.entity = await self._client.get_entity(self.config["CONFIG_CHANNEL"])
         except ValueError:
+            self.entity = None
             return await utils.answer(message, self.strings["no_chennel"])
 
         if self.entity.admin_rights is None:
@@ -104,27 +131,95 @@ class ImageBoardSenderMod(loader.Module):
         elif self.entity.admin_rights.post_messages:
             await utils.answer(message, self.strings["ok"])
 
-    async def send_last_arts(self):
+    async def channelmenucmd(self, message):
+        """Simple Menu and status"""
+        string = f"{self.strings['channel_status']} {self.strings['ok'] if await self.check_entity() else self.strings['no_ok']}\n"
+        string += f"{self.strings['channel_username']} {self.config['CONFIG_CHANNEL'] if self.config['CONFIG_CHANNEL'] != '@notset' else {self.strings['change_channel_username']}}"
+
+        local_btn = [
+            [
+                {
+                    "text": self.strings['btn_menu_change'],
+                    "input": self.strings['btn_menu_change_input'],
+                    "handler": self.change_channel,
+                }
+            ],
+            [{"text": self.strings['btn_menu_update'], "callback": self.update_channel_status}],
+            [
+                {"text": self.strings['btn_menu_stop'], "callback": self.stop_posting}
+                if self.status_loop
+                else {"text": self.strings['btn_menu_start'], "callback": self.start_posting}
+            ] if await self.check_entity() else [],
+        ]
+
+        await self.inline.form(
+            text=string,
+            message=message,
+            reply_markup=local_btn,
+        )
+
+    async def change_channel(self, call, channel_username) -> None:
+        self.config["CONFIG_CHANNEL"] = channel_username
+        await call.edit(text="Успешно изменено", reply_markup=[self.btn[1]])
+
+    async def update_channel_status(self, call) -> None:
+        string = f"{self.strings['channel_status']} {self.strings['ok'] if await self.check_entity() else self.strings['no_ok']}\n"
+        string += f"{self.strings['channel_username']} {self.config['CONFIG_CHANNEL'] if self.config['CONFIG_CHANNEL'] != '@notset' else {self.strings['change_channel_username']}}"
+
+        local_btn = [
+            [
+                {
+                    "text": self.strings['btn_menu_change'],
+                    "input": self.strings['btn_menu_change_input'],
+                    "handler": self.change_channel,
+                }
+            ],
+            [{"text": self.strings['btn_menu_update'], "callback": self.update_channel_status}],
+            [
+                {"text": self.strings['btn_menu_stop'], "callback": self.stop_posting}
+                if self.status_loop
+                else {"text": self.strings['btn_menu_start'], "callback": self.start_posting}
+            ] if await self.check_entity() else [],
+        ]
+
+        await call.edit(
+            text=string,
+            reply_markup=local_btn,
+        )
+
+    async def start_posting(self, call) -> None:
+        self.loop__send_arts.start()
+        self.status_loop = True
+        await self.update_channel_status(call)
+
+    async def stop_posting(self, call) -> None:
+        self.loop__send_arts.stop()
+        self.status_loop = False
+        await self.update_channel_status(call)
+
+    @loader.loop(interval=60)
+    async def loop__send_arts(self):
         """Auto-Posting"""
-        while True:
-            if self.entity is None:
-                await asyncio.sleep(30)
-                await self._init()
-                continue
+        if not self.check_entity():
+            self.loop__send_arts.stop()
 
-            params = "?tags=" + self.config["CONFIG_TAGS"]
-            async with aiohttp.ClientSession() as session:
-                async with session.get(self.url + params) as get:
-                    art_data = await get.json()
-                    await session.close()
+        params = "?tags=" + self.config["CONFIG_TAGS"]
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.url + params) as get:
+                art_data = await get.json()
+                await session.close()
 
-            for item in reversed(art_data):
-                if item["id"] > self.last_id:
-                    await self._client.send_file(
-                        self.entity,
-                        item["sample_url"],
-                        caption=self.string_builder(item),
-                    )
-
+        if self.last_id == 0:
             self.last_id = art_data[0]["id"]
-            await asyncio.sleep(5 * 60)
+            return
+
+        for item in reversed(art_data):
+            if item["id"] > self.last_id:
+                await self._client.send_file(
+                    self.entity,
+                    item["sample_url"],
+                    caption=self.string_builder(item),
+                )
+
+        self.last_id = art_data[0]["id"]
+        await asyncio.sleep(5 * 60)
