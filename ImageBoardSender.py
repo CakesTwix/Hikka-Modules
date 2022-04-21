@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 1, 2)
+__version__ = (1, 1, 3)
 
 # requires: aiohttp
 # meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
@@ -203,7 +203,7 @@ class ImageBoardSenderMod(loader.Module):
     @loader.loop(interval=60)
     async def loop__send_arts(self):
         """Auto-Posting"""
-        if not self.check_entity():
+        if not await self.check_entity():
             self.loop__send_arts.stop()
 
         params = "?tags=" + self.config["CONFIG_TAGS"]
