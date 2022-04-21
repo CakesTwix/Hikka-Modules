@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 1, 1)
+__version__ = (1, 1, 2)
 
 # requires: aiohttp
 # meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
@@ -35,7 +35,7 @@ class ImageBoardSenderMod(loader.Module):
         "no_ok": "Everything not okay (maybe not admin rights)",
         "channel_status": "<b>Channel Status</b>:",
         "channel_username": "<b>Channel username</b>:",
-        "change_channel_username": "<b>Change the channel username</b>:",
+        "change_channel_username": "<b>Change the channel username</b>",
         "btn_menu_change": "✍️ Change username channel",
         "btn_menu_change_input": "✍️ Enter new configuration value for this option",
         "btn_menu_update": "Update",
@@ -72,6 +72,33 @@ class ImageBoardSenderMod(loader.Module):
             return False
         elif self.entity.admin_rights.post_messages:
             return True
+
+    async def menu_keyboard(self) -> list:
+        return [
+            [
+                {
+                    "text": self.strings["btn_menu_change"],
+                    "input": self.strings["btn_menu_change_input"],
+                    "handler": self.change_channel,
+                }
+            ],
+            [
+                {
+                    "text": self.strings["btn_menu_update"],
+                    "callback": self.update_channel_status,
+                }
+            ],
+            [
+                {"text": self.strings["btn_menu_stop"], "callback": self.stop_posting}
+                if self.status_loop
+                else {
+                    "text": self.strings["btn_menu_start"],
+                    "callback": self.start_posting,
+                }
+            ]
+            if await self.check_entity()
+            else [],
+        ]
 
     # Just async init
     async def _init(self) -> None:
@@ -134,57 +161,33 @@ class ImageBoardSenderMod(loader.Module):
     async def channelmenucmd(self, message):
         """Simple Menu and status"""
         string = f"{self.strings['channel_status']} {self.strings['ok'] if await self.check_entity() else self.strings['no_ok']}\n"
-        string += f"{self.strings['channel_username']} {self.config['CONFIG_CHANNEL'] if self.config['CONFIG_CHANNEL'] != '@notset' else {self.strings['change_channel_username']}}"
-
-        local_btn = [
-            [
-                {
-                    "text": self.strings['btn_menu_change'],
-                    "input": self.strings['btn_menu_change_input'],
-                    "handler": self.change_channel,
-                }
-            ],
-            [{"text": self.strings['btn_menu_update'], "callback": self.update_channel_status}],
-            [
-                {"text": self.strings['btn_menu_stop'], "callback": self.stop_posting}
-                if self.status_loop
-                else {"text": self.strings['btn_menu_start'], "callback": self.start_posting}
-            ] if await self.check_entity() else [],
-        ]
+        string += f"{self.strings['channel_username']} {self.config['CONFIG_CHANNEL'] if self.config['CONFIG_CHANNEL'] != '@notset' else self.strings['change_channel_username']}"
 
         await self.inline.form(
             text=string,
             message=message,
-            reply_markup=local_btn,
+            reply_markup=await self.menu_keyboard(),
         )
 
     async def change_channel(self, call, channel_username) -> None:
         self.config["CONFIG_CHANNEL"] = channel_username
-        await call.edit(text="Успешно изменено", reply_markup=[{"text": self.strings['btn_menu_update'], "callback": self.update_channel_status}])
+        await call.edit(
+            text="Успешно изменено",
+            reply_markup=[
+                {
+                    "text": self.strings["btn_menu_update"],
+                    "callback": self.update_channel_status,
+                }
+            ],
+        )
 
     async def update_channel_status(self, call) -> None:
         string = f"{self.strings['channel_status']} {self.strings['ok'] if await self.check_entity() else self.strings['no_ok']}\n"
         string += f"{self.strings['channel_username']} {self.config['CONFIG_CHANNEL'] if self.config['CONFIG_CHANNEL'] != '@notset' else {self.strings['change_channel_username']}}"
 
-        local_btn = [
-            [
-                {
-                    "text": self.strings['btn_menu_change'],
-                    "input": self.strings['btn_menu_change_input'],
-                    "handler": self.change_channel,
-                }
-            ],
-            [{"text": self.strings['btn_menu_update'], "callback": self.update_channel_status}],
-            [
-                {"text": self.strings['btn_menu_stop'], "callback": self.stop_posting}
-                if self.status_loop
-                else {"text": self.strings['btn_menu_start'], "callback": self.start_posting}
-            ] if await self.check_entity() else [],
-        ]
-
         await call.edit(
             text=string,
-            reply_markup=local_btn,
+            reply_markup=await self.menu_keyboard(),
         )
 
     async def start_posting(self, call) -> None:
