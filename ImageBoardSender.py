@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 1, 3)
+__version__ = (1, 2, 0)
 
 # requires: aiohttp
 # meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
@@ -20,6 +20,7 @@ import asyncio
 import logging
 import ast
 import telethon
+
 logger = logging.getLogger(__name__)
 
 
@@ -36,8 +37,11 @@ class ImageBoardSenderMod(loader.Module):
         "no_ok": "Everything not okay (maybe not admin rights)",
         "channel_status": "<b>Channel Status</b>:",
         "channel_username": "<b>Channel username</b>:",
+        "channel_tags": "<b>Channel tags</b>:",
+        "channel_no_tags": "no tags",
         "change_channel_username": "<b>Change the channel username</b>",
-        "btn_menu_change": "✍️ Change username channel",
+        "btn_menu_change_channel": "✍️ Change username channel",
+        "btn_menu_change_tags": "✍️ Change tags",
         "btn_menu_change_input": "✍️ Enter new configuration value for this option",
         "btn_menu_update": "Update",
         "btn_menu_start": "Start",
@@ -59,7 +63,6 @@ class ImageBoardSenderMod(loader.Module):
 
         self.entity = None
         self.last_id = 0
-        self.status_loop = False
 
     # Check channel rights
     async def check_entity(self) -> bool:
@@ -81,11 +84,17 @@ class ImageBoardSenderMod(loader.Module):
         return [
             [
                 {
-                    "text": self.strings["btn_menu_change"],
+                    "text": self.strings["btn_menu_change_channel"],
                     "input": self.strings["btn_menu_change_input"],
                     "handler": self.change_config,
                     "args": ("CONFIG_CHANNEL",),
-                }
+                },
+                {
+                    "text": self.strings["btn_menu_change_tags"],
+                    "input": self.strings["btn_menu_change_input"],
+                    "handler": self.change_config,
+                    "args": ("CONFIG_TAGS",),
+                },
             ],
             [
                 {
@@ -95,7 +104,7 @@ class ImageBoardSenderMod(loader.Module):
             ],
             [
                 {"text": self.strings["btn_menu_stop"], "callback": self.stop_posting}
-                if self.status_loop
+                if self.loop__send_arts.status
                 else {
                     "text": self.strings["btn_menu_start"],
                     "callback": self.start_posting,
@@ -116,18 +125,14 @@ class ImageBoardSenderMod(loader.Module):
         if self.config["CONFIG_CHANNEL"] == "@notset":
             return
 
-        try:
-            self.entity = await self._client.get_entity(self.config["CONFIG_CHANNEL"])
-            params = "?tags=" + self.config["CONFIG_TAGS"]
-            async with aiohttp.ClientSession() as session:
-                async with session.get(self.url + params) as get:
-                    art_data = await get.json()
-                    self.last_id = art_data[0]["id"]
+        self.entity = await self._client.get_entity(self.config["CONFIG_CHANNEL"])
+        params = "?tags=" + self.config["CONFIG_TAGS"]
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.url + params) as get:
+                art_data = await get.json()
+                self.last_id = art_data[0]["id"]
 
-            self.loop__send_arts.start()
-            self.status_loop = True
-        except ValueError:
-            pass
+        self.loop__send_arts.start()
 
     async def client_ready(self, client, db) -> None:
         self._db = db
@@ -150,23 +155,11 @@ class ImageBoardSenderMod(loader.Module):
 
         return string
 
-    async def channelcheckcmd(self, message):
-        """Checking for posting rights"""
-        try:
-            self.entity = await self._client.get_entity(self.config["CONFIG_CHANNEL"])
-        except ValueError:
-            self.entity = None
-            return await utils.answer(message, self.strings["no_chennel"])
-
-        if self.entity.admin_rights is None:
-            await utils.answer(message, self.strings["no_ok"])
-        elif self.entity.admin_rights.post_messages:
-            await utils.answer(message, self.strings["ok"])
-
     async def channelmenucmd(self, message):
         """Simple Menu and status"""
         string = f"{self.strings['channel_status']} {self.strings['ok'] if await self.check_entity() else self.strings['no_ok']}\n"
-        string += f"{self.strings['channel_username']} {self.config['CONFIG_CHANNEL'] if self.config['CONFIG_CHANNEL'] != '@notset' else self.strings['change_channel_username']}"
+        string += f"{self.strings['channel_username']} {self.config['CONFIG_CHANNEL'] if self.config['CONFIG_CHANNEL'] != '@notset' else self.strings['change_channel_username']}\n"
+        string += f"{self.strings['channel_tags']} {self.config['CONFIG_TAGS'] if self.config['CONFIG_TAGS'] != '' else self.strings['channel_no_tags']}\n"
 
         await self.inline.form(
             text=string,
@@ -186,9 +179,9 @@ class ImageBoardSenderMod(loader.Module):
                     except (ValueError, SyntaxError):
                         pass
 
-                    self._db.setdefault(
-                        module.__class__.__name__, {}
-                    ).setdefault("__config__", {})[config_name] = param
+                    self._db.setdefault(module.__class__.__name__, {}).setdefault(
+                        "__config__", {}
+                    )[config_name] = param
                 else:
                     try:
                         del self._db.setdefault(
@@ -212,7 +205,8 @@ class ImageBoardSenderMod(loader.Module):
 
     async def update_channel_status(self, call) -> None:
         string = f"{self.strings['channel_status']} {self.strings['ok'] if await self.check_entity() else self.strings['no_ok']}\n"
-        string += f"{self.strings['channel_username']} {self.config['CONFIG_CHANNEL'] if self.config['CONFIG_CHANNEL'] != '@notset' else self.strings['change_channel_username']}"
+        string += f"{self.strings['channel_username']} {self.config['CONFIG_CHANNEL'] if self.config['CONFIG_CHANNEL'] != '@notset' else self.strings['change_channel_username']}\n"
+        string += f"{self.strings['channel_tags']} {self.config['CONFIG_TAGS'] if self.config['CONFIG_TAGS'] != '' else self.strings['channel_no_tags']}\n"
 
         await call.edit(
             text=string,
@@ -220,21 +214,18 @@ class ImageBoardSenderMod(loader.Module):
         )
 
     async def start_posting(self, call) -> None:
-        self.loop__send_arts.start()
-        self.status_loop = True
-        await self.update_channel_status(call)
+        if not self.loop__send_arts.status:
+            self.loop__send_arts.start()
+            await self.update_channel_status(call)
 
     async def stop_posting(self, call) -> None:
-        self.loop__send_arts.stop()
-        self.status_loop = False
-        await self.update_channel_status(call)
+        if self.loop__send_arts.status:
+            self.loop__send_arts.stop()
+            await self.update_channel_status(call)
 
     @loader.loop(interval=60)
     async def loop__send_arts(self):
         """Auto-Posting"""
-        if not await self.check_entity():
-            self.loop__send_arts.stop()
-
         params = "?tags=" + self.config["CONFIG_TAGS"]
         async with aiohttp.ClientSession() as session:
             async with session.get(self.url + params) as get:
