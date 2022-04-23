@@ -18,7 +18,8 @@ from .. import loader, utils
 import aiohttp
 import asyncio
 import logging
-
+import ast
+import telethon
 logger = logging.getLogger(__name__)
 
 
@@ -64,6 +65,9 @@ class ImageBoardSenderMod(loader.Module):
     async def check_entity(self) -> bool:
         try:
             self.entity = await self._client.get_entity(self.config["CONFIG_CHANNEL"])
+            if not isinstance(self.entity, telethon.types.Channel):
+                self.entity = None
+                return False
         except ValueError:
             self.entity = None
             return False
@@ -79,7 +83,8 @@ class ImageBoardSenderMod(loader.Module):
                 {
                     "text": self.strings["btn_menu_change"],
                     "input": self.strings["btn_menu_change_input"],
-                    "handler": self.change_channel,
+                    "handler": self.change_config,
+                    "args": ("CONFIG_CHANNEL",),
                 }
             ],
             [
@@ -169,8 +174,32 @@ class ImageBoardSenderMod(loader.Module):
             reply_markup=await self.menu_keyboard(),
         )
 
-    async def change_channel(self, call, channel_username) -> None:
-        self.config["CONFIG_CHANNEL"] = channel_username
+    # From Hikka https://github.com/hikariatama/Hikka/blob/d3144fcebdbc8ecbec7f3d299cc927bb1fea00b6/hikka/modules/hikka_config.py#L51-L80
+    async def change_config(self, call, param, config_name) -> None:
+        for module in self.allmodules.modules:
+            if module.strings("name") == self.strings["name"]:
+                module.config[config_name] = param
+
+                if param:
+                    try:
+                        param = ast.literal_eval(param)
+                    except (ValueError, SyntaxError):
+                        pass
+
+                    self._db.setdefault(
+                        module.__class__.__name__, {}
+                    ).setdefault("__config__", {})[config_name] = param
+                else:
+                    try:
+                        del self._db.setdefault(
+                            module.__class__.__name__, {}
+                        ).setdefault("__config__", {})[config_name]
+                    except KeyError:
+                        pass
+
+                self.allmodules.send_config_one(module, self._db, skip_hook=True)
+                self._db.save()
+
         await call.edit(
             text="Успешно изменено",
             reply_markup=[
@@ -183,7 +212,7 @@ class ImageBoardSenderMod(loader.Module):
 
     async def update_channel_status(self, call) -> None:
         string = f"{self.strings['channel_status']} {self.strings['ok'] if await self.check_entity() else self.strings['no_ok']}\n"
-        string += f"{self.strings['channel_username']} {self.config['CONFIG_CHANNEL'] if self.config['CONFIG_CHANNEL'] != '@notset' else {self.strings['change_channel_username']}}"
+        string += f"{self.strings['channel_username']} {self.config['CONFIG_CHANNEL'] if self.config['CONFIG_CHANNEL'] != '@notset' else self.strings['change_channel_username']}"
 
         await call.edit(
             text=string,
