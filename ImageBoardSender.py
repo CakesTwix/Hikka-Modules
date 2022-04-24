@@ -8,13 +8,14 @@
 
 """
 
-__version__ = (1, 2, 1)
+__version__ = (1, 2, 2)
 
 # requires: aiohttp
 # meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
 # meta developer: @CakesTwix
 # scope: inline
 # scope: hikka_only
+# scope: hikka_min 1.1.2
 
 from .. import loader, utils
 import aiohttp
@@ -24,6 +25,21 @@ import ast
 import telethon
 
 logger = logging.getLogger(__name__)
+
+
+def rating_string(rating_list: list) -> str:
+    rating_str = ["s", "q", "e"]
+    if sum(rating_list) == 2:
+        return (
+            "-rating:"
+            + rating_str[[i for i, val in enumerate(rating_list) if not val][0]]
+        )
+    elif sum(rating_list) == 1:
+        return (
+            "rating:" + rating_str[[i for i, val in enumerate(rating_list) if val][0]]
+        )
+    else:
+        return ""
 
 
 @loader.tds
@@ -48,6 +64,9 @@ class ImageBoardSenderMod(loader.Module):
         "btn_menu_update": "Update",
         "btn_menu_start": "Start",
         "btn_menu_stop": "Stop",
+        "btn_menu_Safe": "Safe",
+        "btn_menu_Questionable": "Questionable",
+        "btn_menu_Explicit": "Explicit",
     }
 
     rating = {"e": "Explicit 🔴", "q": "Questionable 🟡", "s": "Safe 🟢"}
@@ -100,10 +119,37 @@ class ImageBoardSenderMod(loader.Module):
             ],
             [
                 {
+                    "text": f"[ {self.strings['btn_menu_Safe']} ]"
+                    if self._db.get(self.strings["name"], "rating")[0]
+                    else self.strings["btn_menu_Safe"],
+                    "callback": self.set_rating,
+                    "args": ("s"),
+                },
+                {
+                    "text": f"[ {self.strings['btn_menu_Questionable']} ]"
+                    if self._db.get(self.strings["name"], "rating")[1]
+                    else self.strings["btn_menu_Questionable"],
+                    "callback": self.set_rating,
+                    "args": ("q"),
+                },
+                {
+                    "text": f"[ {self.strings['btn_menu_Explicit']} ]"
+                    if self._db.get(self.strings["name"], "rating")[2]
+                    else self.strings["btn_menu_Explicit"],
+                    "callback": self.set_rating,
+                    "args": ("e"),
+                },
+            ]
+            if await self.check_entity()
+            else [],
+            [
+                {
                     "text": self.strings["btn_menu_update"],
                     "callback": self.update_channel_status,
                 }
-            ],
+            ]
+            if await self.check_entity()
+            else [],
             [
                 {"text": self.strings["btn_menu_stop"], "callback": self.stop_posting}
                 if self.loop__send_arts.status
@@ -128,7 +174,11 @@ class ImageBoardSenderMod(loader.Module):
             return
 
         self.entity = await self._client.get_entity(self.config["CONFIG_CHANNEL"])
-        params = "?tags=" + self.config["CONFIG_TAGS"]
+        params = (
+            "?tags="
+            + rating_string(self._db.get(self.strings["name"], "rating"))
+            + self.config["CONFIG_TAGS"]
+        )
         async with aiohttp.ClientSession() as session:
             async with session.get(self.url + params) as get:
                 art_data = await get.json()
@@ -139,6 +189,9 @@ class ImageBoardSenderMod(loader.Module):
     async def client_ready(self, client, db) -> None:
         self._db = db
         self._client = client
+
+        if self._db.get(self.strings["name"], "rating") is None:
+            self._db.set(self.strings["name"], "rating", [False, False, False])
 
         await self._init()
 
@@ -215,6 +268,20 @@ class ImageBoardSenderMod(loader.Module):
             reply_markup=await self.menu_keyboard(),
         )
 
+    async def set_rating(self, call, rating) -> None:
+        list_rating = self._db.get(self.strings["name"], "rating")
+        if rating == "s":
+            list_rating[0] = not list_rating[0]
+            self._db.set(self.strings["name"], "rating", list_rating)
+        elif rating == "q":
+            list_rating[1] = not list_rating[1]
+            self._db.set(self.strings["name"], "rating", list_rating)
+        elif rating == "e":
+            list_rating[2] = not list_rating[2]
+            self._db.set(self.strings["name"], "rating", list_rating)
+
+        await self.update_channel_status(call)
+
     async def start_posting(self, call) -> None:
         if not self.loop__send_arts.status:
             self.loop__send_arts.start()
@@ -228,7 +295,11 @@ class ImageBoardSenderMod(loader.Module):
     @loader.loop(interval=60)
     async def loop__send_arts(self):
         """Auto-Posting"""
-        params = "?tags=" + self.config["CONFIG_TAGS"]
+        params = (
+            "?tags="
+            + rating_string(self._db.get(self.strings["name"], "rating"))
+            + self.config["CONFIG_TAGS"]
+        )
         async with aiohttp.ClientSession() as session:
             async with session.get(self.url + params) as get:
                 art_data = await get.json()
