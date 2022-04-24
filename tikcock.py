@@ -10,13 +10,14 @@
 
 """
 
-__version__ = (1, 0, 2)
+__version__ = (1, 0, 3)
 
 # meta pic: http://assets.stickpng.com/images/5cb78671a7c7755bf004c14b.png
 # meta developer: @CakesTwix
 
 import logging
 from .. import loader, utils
+from telethon.errors.rpcerrorlist import BotResponseTimeoutError
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,8 @@ class TikTokMod(loader.Module):
 
     strings = {
         "name": "TikTokDownloader",
-        "no_args": "Not found args, pls check help",
+        "no_args": "🚫 Not found args, pls check help",
+        "timeout_error": "🚫 The bot didn't send anything((",
     }
 
     @loader.unrestricted
@@ -38,7 +40,11 @@ class TikTokMod(loader.Module):
         if not args:
             return await utils.answer(message, self.strings["no_args"])
 
-        r = await message.client.inline_query("tikdobot", args)
+        try:
+            r = await message.client.inline_query("tikdobot", args)
+        except BotResponseTimeoutError:
+            return await utils.answer(message, self.strings["timeout_error"])
+
         await message.client.send_file(message.to_id, r[1].result.content.url)
         await message.delete()
 
@@ -50,6 +56,10 @@ class TikTokMod(loader.Module):
         if not args:
             return await utils.answer(message, self.strings["no_args"])
 
-        r = await message.client.inline_query("tikdobot", args)
+        try:
+            r = await message.client.inline_query("tikdobot", args)
+        except BotResponseTimeoutError:
+            return await utils.answer(message, self.strings["timeout_error"])
+
         await message.client.send_file(message.to_id, r[0].result.content.url)
         await message.delete()
