@@ -8,11 +8,13 @@
 
 """
 
-__version__ = (1, 2, 0)
+__version__ = (1, 2, 1)
 
 # requires: aiohttp
 # meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
 # meta developer: @CakesTwix
+# scope: inline
+# scope: hikka_only
 
 from .. import loader, utils
 import aiohttp
@@ -243,6 +245,7 @@ class ImageBoardSenderMod(loader.Module):
                     item["sample_url"],
                     caption=self.string_builder(item),
                 )
+                await asyncio.sleep(0.5)
 
         self.last_id = art_data[0]["id"]
         await asyncio.sleep(5 * 60)
