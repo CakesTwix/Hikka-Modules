@@ -31,6 +31,12 @@ class CompliMod(loader.Module):
         "compliments_man":"умный хороший милый добрый лучший заботливый",
     }
 
+    strings_ru = {
+        "cfg_emoji":"Эмодзи в конце сообщения",
+        "compliments_women":"умная хорошая милая добрая лучшая заботливая",
+        "compliments_man":"умный хороший милый добрый лучший заботливый"
+    }
+
     def __init__(self):
         self.name = self.strings["name"]
         self.config = loader.ModuleConfig(

@@ -34,6 +34,12 @@ class RToolsMod(loader.Module):
         "general_error": "Oh no, cringe, error",
     }
 
+    strings_ru = {
+        "no_found": "Не найдено",
+        "no_args": "Аргументы не найдены, пожалуйста, проверьте справку",
+        "general_error": "❗️Ашибка❗️ ",
+    }
+
     @loader.unrestricted
     @loader.ratelimit
     async def mac2vendorcmd(self, message):

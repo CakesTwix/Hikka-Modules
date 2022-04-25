@@ -32,6 +32,11 @@ class TranslatorMod(loader.Module):
         "error": "Error!\n .gtr [en] ru | text",
     }
 
+    strings_ru = {
+        "cfg_lingva_url": "Альтернативный интерфейс для Google Translate",
+        "error": "Ошибка!\n .gtr [en] ru | текст",
+    }
+
     def __init__(self):
         self.config = loader.ModuleConfig(
             "lingva_url",

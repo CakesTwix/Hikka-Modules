@@ -46,6 +46,17 @@ class LinuxPackagesMod(loader.Module):
         "no_packages": "<b>No packages</b>...",
     }
 
+    strings_ru = {
+        "no_name": "Пожалуйста, дайте мне имя пакета",
+        "general_error": "<b>Неизвестная ошибка</b> .-.",
+        "string_list": "<b>Список пакетов в {}</b>\n\n",
+        "info_about": "<b>Информация о</b> <code>{}</code>\n\n",
+        "ver": "<b>Версия:</b> {}\n",
+        "description": "<b>Описание:</b> {}\n",
+        "maintainer": "<b>Сопровождающий:</b> {}\n",
+        "no_packages": "<b>Нет пакетов</b>...",
+    }
+
     async def aurcmd(self, message):
         """Arch User Repository"""
         args = utils.get_args_raw(message)

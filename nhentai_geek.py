@@ -74,6 +74,11 @@ class InlineNHentaiMod(loader.Module):
         "no_tags_inline": "ℹ List tags: https://nhentai.net/tags/",
     }
 
+    strings_ru = {
+        "no_tags": "Пожалуйста, напишите теги :(",
+        "no_tags_inline": "ℹ Список тегов: https://nhentai.net/tags/",
+    }
+
     @loader.unrestricted
     @loader.ratelimit
     async def nhrandomcmd(self, message):

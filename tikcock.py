@@ -32,6 +32,11 @@ class TikTokMod(loader.Module):
         "timeout_error": "🚫 The bot didn't send anything((",
     }
 
+    strings_ru = {
+        "no_args": "🚫 Аргументы не найдены, пожалуйста, проверьте справку",
+        "timeout_error": "🚫 Бот ничего не прислал((",
+    }
+
     @loader.unrestricted
     @loader.ratelimit
     async def dttnwcmd(self, message):

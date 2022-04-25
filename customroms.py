@@ -38,6 +38,13 @@ class CustomRomsMod(loader.Module):
         "general_error": "🚫 <b>Oh no, cringe, error<b>",
     }
 
+    strings_ru = {
+        "download": "⬇️ <b>Скачать</b> :",
+        "no_device": "🚫 <b>Нет устройства.<b>",
+        "no_codename": "🚫 <b>Пжл коднейм((<b>",
+        "general_error": "🚫 <b>❗️Ашибка❗️<b>",
+    }
+
     twrp_api = "https://dl.twrp.me/"
 
     # ROMs

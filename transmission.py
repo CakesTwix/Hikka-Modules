@@ -74,6 +74,33 @@ class TransmissionMod(loader.Module):
         "inline_answer": "ℹ No changes",
     }
 
+    strings_ru = {
+        "cfg_username": "Юзернейм",
+        "cfg_password": "Пароль",
+        "cfg_port": "Сообщение (9091)",
+        "cfg_host": "Хост (localhost)",
+        "cfg_protocol": "Протокол (http)",
+        "cfg_rpc": "URL-адрес RPC (/transmission/)",
+        "not_ready": "Пожалуйста, проверьте конфиг",
+        "torrent_name": "<b>Имя:</b> ",
+        "torrent_status": "<b>Статус:</b> ",
+        "torrent_hash": "<b>Хэш:</b> ",
+        "torrent_dir": "<b>Директория:</b> ",
+        "torrent_size": "<b>Размер:</b> ",
+        "kb_update": "🔄 Обновить",
+        "kb_close": "🚫 Закрыть",
+        "torrent_eta": "ETA: ",
+        "torrent_error": "<b>Torrent not found in result</b>",
+        "kb_delete": "❌ Удалить торрент ❌",
+        "kb_delete_data": "❌ Удалить торрент с данными ❌",
+        "answer_start": "Запуск торрента",
+        "answer_stop": "Торрент остановлен",
+        "answer_delete": "Торрент удален",
+        "inline_title": "Торрент-менеджер",
+        "inline_desc": "ℹ Нажмите, чтобы просмотреть параметры",
+        "inline_answer": "ℹ Без изменений",
+    }
+
     def stringTorrent(self, torrent):
         torrent_text = f"{self.strings['torrent_name']}{torrent.name} \n"
         torrent_text += f"{self.strings['torrent_status']}{torrent.status} \n"

@@ -38,6 +38,18 @@ class InlineMinecraftInfoMod(loader.Module):
         "versions": "<b>Versions</b>: {}\n",
     }
 
+    strings_ru = {
+        "error_message": "🚫 Этот объект не существует или вы ввели его неправильно",
+        "about_user": "<b>Доступная информация об игроке</b> <code>{}</code>:'\n",
+        "about_server": "<b>Доступная информация о сервере</b> <code>{}</code>:'\n",
+        "username": "<b>Имя игрока:</b> <code>{}</code>\n",
+        "id": "<b>Id:</b> <code>{}</code>\n",
+        "description": "<b>Описание</b>: {}\n",
+        "latency": "<b>Задержка</b>: {}\n",
+        "players": "<b>Игроки</b>: {} in {}\n",
+        "versions": "<b>Версии</b>: {}\n",
+    }
+
     base_url = "https://api.minetools.eu"
 
     async def mucheckcmd(self, message):

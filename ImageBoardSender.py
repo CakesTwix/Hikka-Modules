@@ -69,6 +69,29 @@ class ImageBoardSenderMod(loader.Module):
         "btn_menu_Explicit": "Explicit",
     }
 
+    strings_ru = {
+        "cfg_channel": "Переменная канала, где будет размещаться контент",
+        "cfg_tags": "Фильтрация артов по тегам",
+        "name": "ImageBoardSender",
+        "no_chennel": "Канал не существует",
+        "ok": "Все хорошо",
+        "no_ok": "Все не окей (возможно нет прав админа)",
+        "channel_status": "<b>Статус канала</b>:",
+        "channel_username": "<b>Имя канала</b>:",
+        "channel_tags": "<b>Теги канала</b>:",
+        "channel_no_tags": "нет тегов",
+        "change_channel_username": "<b>Изменить имя пользователя канала</b>",
+        "btn_menu_change_channel": "✍️ Изменить имя канал",
+        "btn_menu_change_tags": "✍️ Изменить теги",
+        "btn_menu_change_input": "✍️ Введите новое значение конфигурации для этой опции",
+        "btn_menu_update": "Обновить",
+        "btn_menu_start": "Start",
+        "btn_menu_stop": "Stop",
+        "btn_menu_Safe": "Безопасно",
+        "btn_menu_Questionable": "Под вопросом",
+        "btn_menu_Explicit": "Откровенное 18+",
+    }
+
     rating = {"e": "Explicit 🔴", "q": "Questionable 🟡", "s": "Safe 🟢"}
     url = "https://yande.re/post.json"
 
