@@ -58,6 +58,7 @@ class ImageBoardSenderMod(loader.Module):
         "channel_tags": "<b>Channel tags</b>:",
         "channel_no_tags": "no tags",
         "change_channel_username": "<b>Change the channel username</b>",
+        "changed_successfully": "Successfully changed",
         "btn_menu_change_channel": "✍️ Change username channel",
         "btn_menu_change_tags": "✍️ Change tags",
         "btn_menu_change_input": "✍️ Enter new configuration value for this option",
@@ -67,6 +68,8 @@ class ImageBoardSenderMod(loader.Module):
         "btn_menu_Safe": "Safe",
         "btn_menu_Questionable": "Questionable",
         "btn_menu_Explicit": "Explicit",
+        "btn_menu_autostart_on": "✅ Autostart",
+        "btn_menu_autostart_off": "❌ Autostart"
     }
 
     strings_ru = {
@@ -81,6 +84,7 @@ class ImageBoardSenderMod(loader.Module):
         "channel_tags": "<b>Теги канала</b>:",
         "channel_no_tags": "нет тегов",
         "change_channel_username": "<b>Изменить имя пользователя канала</b>",
+        "changed_successfully": "Успешно изменено",
         "btn_menu_change_channel": "✍️ Изменить имя канал",
         "btn_menu_change_tags": "✍️ Изменить теги",
         "btn_menu_change_input": "✍️ Введите новое значение конфигурации для этой опции",
@@ -90,6 +94,8 @@ class ImageBoardSenderMod(loader.Module):
         "btn_menu_Safe": "Безопасно",
         "btn_menu_Questionable": "Под вопросом",
         "btn_menu_Explicit": "Откровенное 18+",
+        "btn_menu_autostart_on": "✅ Автостарт",
+        "btn_menu_autostart_off": "❌ Автостарт"
     }
 
     rating = {"e": "Explicit 🔴", "q": "Questionable 🟡", "s": "Safe 🟢"}
@@ -166,32 +172,32 @@ class ImageBoardSenderMod(loader.Module):
             if await self.check_entity()
             else [],
             [
-                {
-                    "text": self.strings["btn_menu_update"],
-                    "callback": self.update_channel_status,
-                }
-            ]
-            if await self.check_entity()
-            else [],
-            [
                 {"text": self.strings["btn_menu_stop"], "callback": self.stop_posting}
                 if self.loop__send_arts.status
                 else {
                     "text": self.strings["btn_menu_start"],
                     "callback": self.start_posting,
+                },
+                {
+                    "text": self.strings['btn_menu_autostart_on']
+                    if self._db.get(self.strings["name"], "autostart")
+                    else self.strings["btn_menu_autostart_off"],
+                    "callback": self.change_autostart,
                 }
             ]
             if await self.check_entity()
             else [],
+            [
+                {
+                    "text": self.strings["btn_menu_update"],
+                    "callback": self.update_channel_status,
+                }
+            ]
         ]
 
     # Just async init
     async def _init(self) -> None:
         await self.check_entity()
-        try:
-            self.loop__send_arts.stop()
-        except Exception:
-            pass
 
         if self.config["CONFIG_CHANNEL"] == "@notset":
             return
@@ -207,23 +213,27 @@ class ImageBoardSenderMod(loader.Module):
                 art_data = await get.json()
                 self.last_id = art_data[0]["id"]
 
-        self.loop__send_arts.start()
+                if self._db.get(self.strings["name"], "autostart"):
+                    self.loop__send_arts.start()
 
     async def client_ready(self, client, db) -> None:
         self._db = db
         self._client = client
 
-        if self._db.get(self.strings["name"], "rating") is None:
-            self._db.set(self.strings["name"], "rating", [False, False, False])
-
         await self._init()
+        
+        if self._db.get(self.strings["name"], "rating") == None and self._db.get(self.strings["name"], "autostart") == None:
+            self._db.set(self.strings["name"], "rating", [False, False, False])
+            self._db.set(self.strings["name"], "autostart", False)
+
 
     async def on_unload(self) -> None:
         try:
             self.loop__send_arts.stop()
         except Exception:
             pass
-
+    
+    # Caption
     def string_builder(self, json):
         string = f"Tags : {json['tags']}\n"
         string += f'©️ : {json["author"] or "No author"}\n'
@@ -232,6 +242,8 @@ class ImageBoardSenderMod(loader.Module):
         string += (f"🆔 : <a href=https://yande.re/post/show/{json['id']}>{json['id']}</a>")  # fmt: skip
 
         return string
+
+    # Commands #
 
     async def channelmenucmd(self, message):
         """Simple Menu and status"""
@@ -244,6 +256,8 @@ class ImageBoardSenderMod(loader.Module):
             message=message,
             reply_markup=await self.menu_keyboard(),
         )
+
+    # Inline callback handlers #
 
     # From Hikka https://github.com/hikariatama/Hikka/blob/d3144fcebdbc8ecbec7f3d299cc927bb1fea00b6/hikka/modules/hikka_config.py#L51-L80
     async def change_config(self, call, param, config_name) -> None:
@@ -272,7 +286,7 @@ class ImageBoardSenderMod(loader.Module):
                 self._db.save()
 
         await call.edit(
-            text="Успешно изменено",
+            text=self.strings["changed_successfully"],
             reply_markup=[
                 {
                     "text": self.strings["btn_menu_update"],
@@ -314,6 +328,12 @@ class ImageBoardSenderMod(loader.Module):
         if self.loop__send_arts.status:
             self.loop__send_arts.stop()
             await self.update_channel_status(call)
+
+    async def change_autostart(self, call) -> None:
+        self._db.set(self.strings["name"], "autostart", not self._db.get(self.strings["name"], "autostart"))
+        await self.update_channel_status(call)
+
+    # General loop #
 
     @loader.loop(interval=60)
     async def loop__send_arts(self):
