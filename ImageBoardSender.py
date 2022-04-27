@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 2, 2)
+__version__ = (1, 2, 3)
 
 # requires: aiohttp
 # meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
@@ -354,11 +354,15 @@ class ImageBoardSenderMod(loader.Module):
 
         for item in reversed(art_data):
             if item["id"] > self.last_id:
-                await self._client.send_file(
-                    self.entity,
-                    item["sample_url"],
-                    caption=self.string_builder(item),
-                )
+                try:
+                    await self._client.send_file(
+                        self.entity,
+                        item["sample_url"],
+                        caption=self.string_builder(item),
+                    )
+                except Exception as e:
+                    logger.error(str(e))
+
                 await asyncio.sleep(0.5)
 
         self.last_id = art_data[0]["id"]
