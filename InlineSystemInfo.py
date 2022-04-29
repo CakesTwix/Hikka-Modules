@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 0, 0)
+__version__ = (1, 0, 1)
 
 # requires: psutil py-cpuinfo tqdm
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
@@ -86,9 +86,9 @@ class InlineSystemInfoMod(loader.Module):
         string = "🧠  <b>CPU Info</b>\n"
         string += f"⦁ <b>Name</b>: {self.cpu_info['brand_raw']} ({self.cpu_info['arch_string_raw']})\n"
         string += f"⦁ <b>Count</b>: {self.cpu_count_logic} ({self.cpu_count})\n"
-        string += f"⦁ <b>Freq</b>: {self.cpu_freq[0]} (max: {self.cpu_freq[2]} / min: {self.cpu_freq[1]})\n"
+        string += f"⦁ <b>Freq</b>: {self.cpu_freq[0]} (max: {self.cpu_freq[2]} / min: {self.cpu_freq[1]})\n" if self.cpu_freq else ""
         string += f"⦁ <b>Flags</b>: {' '.join(self.cpu_info['flags'])}\n"
-        string += f"⦁ <b>Load avg</b>: {self.loadavg[0]} {self.loadavg[1]} {self.loadavg[2]})\n"
+        string += f"⦁ <b>Load avg</b>: {self.loadavg[0]} {self.loadavg[1]} {self.loadavg[2]}\n"
 
         return string
 
