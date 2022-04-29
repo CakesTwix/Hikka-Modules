@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 0, 1)
+__version__ = (1, 0, 2)
 
 # requires: psutil py-cpuinfo tqdm
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
@@ -84,7 +84,7 @@ class InlineSystemInfoMod(loader.Module):
 
     def cpu_string(self):
         string = "🧠  <b>CPU Info</b>\n"
-        string += f"⦁ <b>Name</b>: {self.cpu_info['brand_raw']} ({self.cpu_info['arch_string_raw']})\n"
+        string += f"⦁ <b>Name</b>: {self.cpu_info.get('brand_raw', 'Undetermined.')} ({self.cpu_info['arch_string_raw']})\n"
         string += f"⦁ <b>Count</b>: {self.cpu_count_logic} ({self.cpu_count})\n"
         string += f"⦁ <b>Freq</b>: {self.cpu_freq[0]} (max: {self.cpu_freq[2]} / min: {self.cpu_freq[1]})\n" if self.cpu_freq else ""
         string += f"⦁ <b>Flags</b>: {' '.join(self.cpu_info['flags'])}\n"
@@ -131,8 +131,8 @@ class InlineSystemInfoMod(loader.Module):
 
     def memory_string(self):
         string = "🗄  <b>Memory Info</b>\n"
-        string += f'<b>RAM</b>: {tqdm.tqdm(total=100, initial=self.virtual_memory.percent, bar_format="[{bar}] {n_fmt}/{total_fmt}")} <code>({bytes2human(self.virtual_memory.used)}/{bytes2human(self.virtual_memory.total)})</code>\n'
-        string += f'<b>Swap</b>: {tqdm.tqdm(total=100, initial=self.swap_memory.percent, bar_format="[{bar}] {n_fmt}/{total_fmt}")} <code>({bytes2human(self.swap_memory.used)}/{bytes2human(self.swap_memory.total)})</code>\n'
+        string += f'<b>RAM</b>: {tqdm.tqdm(ncols=30, total=100, initial=self.virtual_memory.percent, bar_format="[{bar}] {n_fmt}/{total_fmt}")} <code>({bytes2human(self.virtual_memory.used)}/{bytes2human(self.virtual_memory.total)})</code>\n'
+        string += f'<b>Swap</b>: {tqdm.tqdm(ncols=30, total=100, initial=self.swap_memory.percent, bar_format="[{bar}] {n_fmt}/{total_fmt}")} <code>({bytes2human(self.swap_memory.used)}/{bytes2human(self.swap_memory.total)})</code>\n'
 
         return string
 
