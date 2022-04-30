@@ -8,9 +8,9 @@
 
 """
 
-__version__ = (1, 0, 2)
+__version__ = (1, 0, 3)
 
-# requires: psutil py-cpuinfo tqdm
+# requires: psutil py-cpuinfo
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
 # meta developer: @CakesTwix
 # scope: inline
@@ -23,12 +23,16 @@ from typing import Union
 
 import cpuinfo
 import psutil
-import tqdm
 from aiogram.utils.markdown import quote_html
 
 from .. import loader, utils
 
 logger = logging.getLogger(__name__)
+
+def progressbar(iteration: int, length: int) -> str:
+    percent = ("{0:." + str(1) + "f}").format(100 * (iteration  / float(100)))
+    filledLength = int(length * iteration // 100)
+    return "█" * filledLength + '▒' * (length - filledLength)
 
 # From Hikka https://github.com/hikariatama/Hikka/blob/master/hikka/utils.py#L459-L461
 def chunks(_list: Union[list, tuple, set], n: int, /) -> list:
@@ -101,7 +105,7 @@ class InlineSystemInfoMod(loader.Module):
             string += f"├── <b>Mount</b> {disk.mountpoint}\n"
             string += f"├── <b>FS</b> {disk.fstype}\n"
             string += f"├── <b>Disk Usage</b> {disk_usage.percent}% ({bytes2human(disk_usage.used)}/{bytes2human(disk_usage.total)})\n"
-            string += f"│       └──{tqdm.tqdm(total=100, initial=disk_usage.percent, bar_format='[{bar}] {n_fmt}/{total_fmt}')}\n"
+            string += f"│       └──{progressbar(disk_usage.percent, 10)}\n"
             string += f"└── <b>Options</b> {disk.opts}\n\n"
 
         return string
@@ -131,8 +135,8 @@ class InlineSystemInfoMod(loader.Module):
 
     def memory_string(self):
         string = "🗄  <b>Memory Info</b>\n"
-        string += f'<b>RAM</b>: {tqdm.tqdm(ncols=30, total=100, initial=self.virtual_memory.percent, bar_format="[{bar}] {n_fmt}/{total_fmt}")} <code>({bytes2human(self.virtual_memory.used)}/{bytes2human(self.virtual_memory.total)})</code>\n'
-        string += f'<b>Swap</b>: {tqdm.tqdm(ncols=30, total=100, initial=self.swap_memory.percent, bar_format="[{bar}] {n_fmt}/{total_fmt}")} <code>({bytes2human(self.swap_memory.used)}/{bytes2human(self.swap_memory.total)})</code>\n'
+        string += f'<b>RAM</b>: {progressbar(self.virtual_memory.percent, 10)} <code>({bytes2human(self.virtual_memory.used)}/{bytes2human(self.virtual_memory.total)})</code>\n'
+        string += f'<b>Swap</b>: {progressbar(self.swap_memory.percent, 10)} <code>({bytes2human(self.swap_memory.used)}/{bytes2human(self.swap_memory.total)})</code>\n'
 
         return string
 
