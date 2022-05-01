@@ -12,6 +12,7 @@
 # meta developer: @CakesTwix
 # requires: yt_dlp requests
 # scope: hikka_min 1.1.11
+# scope: hikka_only 
 
 import asyncio
 import logging
