@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 0, 3)
+__version__ = (1, 0, 4)
 
 # requires: psutil py-cpuinfo
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
@@ -69,7 +69,7 @@ class InlineSystemInfoMod(loader.Module):
     }
 
     def menu_keyboard(self) -> list:
-        return [
+        keyboard = [
             {"text": "🧠 CPU", "callback": self.change_stuff, "args": ("CPU",)},
             {"text": "💽 Disk", "callback": self.change_stuff, "args": ("Disk",)},
             {
@@ -83,8 +83,11 @@ class InlineSystemInfoMod(loader.Module):
                 "args": ("Network Stats",),
             },
             {"text": "🗄 Memory", "callback": self.change_stuff, "args": ("Memory",)},
-            {"text": "🌡 Sensors", "callback": self.change_stuff, "args": ("Sensors",)},
         ]
+        if self.sensors_temperatures or self.sensors_fans:
+            keyboard.append({"text": "🌡 Sensors", "callback": self.change_stuff, "args": ("Sensors",)})
+
+        return keyboard
 
     def cpu_string(self):
         string = "🧠  <b>CPU Info</b>\n"
@@ -143,22 +146,24 @@ class InlineSystemInfoMod(loader.Module):
     def sensors_string(self):
         string = "🌡  <b>Sensors Info</b>\n"
         string += "<b>Temperature</b>:\n"
-        for sensor_name in self.sensors_temperatures:
-            sensor = self.sensors_temperatures[sensor_name]
-            string += f"<b>{sensor_name}</b>\n"
-            for sensor_info in sensor:
-                attr = [
-                    a
-                    for a in dir(sensor_info)
-                    if not a.startswith("__")
-                    and not a.startswith("_")
-                    and not callable(getattr(sensor_info, a))
-                ]
-                for item in attr[:-1]:
-                    string += f"├── {item}: {getattr(sensor_info, item)}\n"
-                else:
-                    string += f"└── {attr[-1]}: {getattr(sensor_info, attr[-1])}\n"
-            string += "\n"
+
+        if self.sensors_temperatures:
+            for sensor_name in self.sensors_temperatures:
+                sensor = self.sensors_temperatures[sensor_name]
+                string += f"<b>{sensor_name}</b>\n"
+                for sensor_info in sensor:
+                    attr = [
+                        a
+                        for a in dir(sensor_info)
+                        if not a.startswith("__")
+                        and not a.startswith("_")
+                        and not callable(getattr(sensor_info, a))
+                    ]
+                    for item in attr[:-1]:
+                        string += f"├── {item}: {getattr(sensor_info, item)}\n"
+                    else:
+                        string += f"└── {attr[-1]}: {getattr(sensor_info, attr[-1])}\n"
+                string += "\n"
 
         if self.sensors_fans:
             string += "<b>Fans</b>:"
