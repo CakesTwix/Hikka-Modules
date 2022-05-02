@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 0, 0)
+__version__ = (1, 1, 0)
 
 # requires: torch
 # meta pic: https://cdn.pixabay.com/photo/2017/07/09/20/48/speaker-2488096_1280.png
@@ -72,7 +72,7 @@ class SileroMod(loader.Module):
         )
         self.model.to(device)
 
-    async def send_audio(self, text: str, speaker: str, chat_id: int):
+    async def send_audio(self, text: str, speaker: str, message):
         audio_paths = self.model.save_wav(
             text=text, speaker=speaker, sample_rate=self.config["CONFIG_RATE"]
         )
@@ -80,39 +80,40 @@ class SileroMod(loader.Module):
         with open(audio_paths, "rb") as audio_file:
             content = audio_file.read()
             audio_file.seek(0)
-
+            
             await self._client.send_file(
-                chat_id,
+                message.chat.id,
                 await self.fast_upload(audio_file, filename="audio.mp3"),
                 voice_note=self.config["CONFIG_AS_AUDIO_NOTE"],
+                reply_to=await message.get_reply_message()
             )
 
     async def sxeniacmd(self, message):
         """From text to sound (xenia)"""
         if args := utils.get_args_raw(message):
             await message.delete()
-            await self.send_audio(args, "xenia", message.chat.id)
+            await self.send_audio(args, "xenia", message)
 
     async def saidarcmd(self, message):
         """From text to sound (aidar)"""
         if args := utils.get_args_raw(message):
             await message.delete()
-            await self.send_audio(args, "aidar", message.chat.id)
+            await self.send_audio(args, "aidar", message)
 
     async def sbayacmd(self, message):
         """From text to sound (baya)"""
         if args := utils.get_args_raw(message):
             await message.delete()
-            await self.send_audio(args, "baya", message.chat.id)
+            await self.send_audio(args, "baya", message)
 
     async def skseniyacmd(self, message):
         """From text to sound (kseniya)"""
         if args := utils.get_args_raw(message):
             await message.delete()
-            await self.send_audio(args, "kseniya", message.chat.id)
+            await self.send_audio(args, "kseniya", message)
 
     async def srandomcmd(self, message):
         """From text to sound (random)"""
         if args := utils.get_args_raw(message):
             await message.delete()
-            await self.send_audio(args, "random", message.chat.id)
+            await self.send_audio(args, "random", message)
