@@ -8,14 +8,14 @@
 
 """
 
-__version__ = (1, 0, 4)
+__version__ = (1, 1, 0)
 
 # requires: psutil py-cpuinfo
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
 # meta developer: @CakesTwix
 # scope: inline
 # scope: hikka_min 1.1.2
-# scope: hikka_only 
+# scope: hikka_only
 
 import datetime
 import logging
@@ -29,10 +29,12 @@ from .. import loader, utils
 
 logger = logging.getLogger(__name__)
 
+
 def progressbar(iteration: int, length: int) -> str:
-    percent = ("{0:." + str(1) + "f}").format(100 * (iteration  / float(100)))
+    percent = ("{0:." + str(1) + "f}").format(100 * (iteration / float(100)))
     filledLength = int(length * iteration // 100)
-    return "█" * filledLength + '▒' * (length - filledLength)
+    return "█" * filledLength + "▒" * (length - filledLength)
+
 
 # From Hikka https://github.com/hikariatama/Hikka/blob/master/hikka/utils.py#L459-L461
 def chunks(_list: Union[list, tuple, set], n: int, /) -> list:
@@ -71,21 +73,33 @@ class InlineSystemInfoMod(loader.Module):
     def menu_keyboard(self) -> list:
         keyboard = [
             {"text": "🧠 CPU", "callback": self.change_stuff, "args": ("CPU",)},
-            {"text": "💽 Disk", "callback": self.change_stuff, "args": ("Disk",)},
             {
                 "text": "🌐 Network Address",
                 "callback": self.change_stuff,
                 "args": ("Network Address",),
             },
-            {
-                "text": "🌐 Network Stats",
-                "callback": self.change_stuff,
-                "args": ("Network Stats",),
-            },
             {"text": "🗄 Memory", "callback": self.change_stuff, "args": ("Memory",)},
         ]
         if self.sensors_temperatures or self.sensors_fans:
-            keyboard.append({"text": "🌡 Sensors", "callback": self.change_stuff, "args": ("Sensors",)})
+            keyboard.append(
+                {
+                    "text": "🌡 Sensors",
+                    "callback": self.change_stuff,
+                    "args": ("Sensors",),
+                }
+            )
+
+        if utils.get_named_platform() != "🕶 Termux":
+            keyboard.append(
+                {
+                    "text": "🌐 Network Stats",
+                    "callback": self.change_stuff,
+                    "args": ("Network Stats",),
+                },
+            )
+            keyboard.append(
+                {"text": "💽 Disk", "callback": self.change_stuff, "args": ("Disk",)}
+            )
 
         return keyboard
 
@@ -93,9 +107,17 @@ class InlineSystemInfoMod(loader.Module):
         string = "🧠  <b>CPU Info</b>\n"
         string += f"⦁ <b>Name</b>: {self.cpu_info.get('brand_raw', 'Undetermined.')} ({self.cpu_info['arch_string_raw']})\n"
         string += f"⦁ <b>Count</b>: {self.cpu_count_logic} ({self.cpu_count})\n"
-        string += f"⦁ <b>Freq</b>: {self.cpu_freq[0]} (max: {self.cpu_freq[2]} / min: {self.cpu_freq[1]})\n" if self.cpu_freq else ""
+        string += (
+            f"⦁ <b>Freq</b>: {self.cpu_freq[0]} (max: {self.cpu_freq[2]} / min: {self.cpu_freq[1]})\n"
+            if self.cpu_freq
+            else ""
+        )
         string += f"⦁ <b>Flags</b>: {' '.join(self.cpu_info['flags'])}\n"
-        string += f"⦁ <b>Load avg</b>: {self.loadavg[0]} {self.loadavg[1]} {self.loadavg[2]}\n"
+        string += (
+            f"⦁ <b>Load avg</b>: {self.loadavg[0]} {self.loadavg[1]} {self.loadavg[2]}\n"
+            if hasattr(self, "loadavg")
+            else ""
+        )
 
         return string
 
@@ -138,8 +160,8 @@ class InlineSystemInfoMod(loader.Module):
 
     def memory_string(self):
         string = "🗄  <b>Memory Info</b>\n"
-        string += f'<b>RAM</b>: {progressbar(self.virtual_memory.percent, 10)} <code>({bytes2human(self.virtual_memory.used)}/{bytes2human(self.virtual_memory.total)})</code>\n'
-        string += f'<b>Swap</b>: {progressbar(self.swap_memory.percent, 10)} <code>({bytes2human(self.swap_memory.used)}/{bytes2human(self.swap_memory.total)})</code>\n'
+        string += f"<b>RAM</b>: {progressbar(self.virtual_memory.percent, 10)} <code>({bytes2human(self.virtual_memory.used)}/{bytes2human(self.virtual_memory.total)})</code>\n"
+        string += f"<b>Swap</b>: {progressbar(self.swap_memory.percent, 10)} <code>({bytes2human(self.swap_memory.used)}/{bytes2human(self.swap_memory.total)})</code>\n"
 
         return string
 
@@ -197,36 +219,55 @@ class InlineSystemInfoMod(loader.Module):
 
     def __init__(self):
         # CPU stuff
-        self.cpu_percent = psutil.cpu_percent(interval=None)
         self.cpu_count_logic = psutil.cpu_count()
         self.cpu_count = psutil.cpu_count(logical=False)
         self.cpu_freq = psutil.cpu_freq()
         self.cpu_info = cpuinfo.get_cpu_info()
 
-        # Linux stuff
-        self.loadavg = psutil.getloadavg()
-
         # Memory
         self.virtual_memory = psutil.virtual_memory()
         self.swap_memory = psutil.swap_memory()
+
+        # Network
+        self.net_if_addrs = psutil.net_if_addrs()
+
+        # Sensors
+        self.sensors_temperatures = psutil.sensors_temperatures()
+        self.sensors_fans = psutil.sensors_fans()
+        # self.sensors_battery = psutil.sensors_battery()
+
+        self.version_info = psutil.version_info
+
+        self.info_string = {
+            "CPU": self.cpu_string(),
+            "Network Address": self.network_addr_string(),
+            "Memory": self.memory_string(),
+            "Sensors": self.sensors_string(),
+        }
+
+        # Termux is shit
+        if utils.get_named_platform() == "🕶 Termux":
+            return
+
+        # CPU stuff
+        self.cpu_percent = psutil.cpu_percent(interval=None)
+
+        # Linux stuff
+        self.loadavg = psutil.getloadavg()
 
         # Disks
         self.disk_partitions = psutil.disk_partitions()
 
         # Network
-        self.net_if_addrs = psutil.net_if_addrs()
         self.net_if_stats = psutil.net_if_stats()
 
         # Sensors
-        self.sensors_temperatures = psutil.sensors_temperatures()
-        self.sensors_fans = psutil.sensors_fans()
         self.sensors_battery = psutil.sensors_battery()
 
         # Other
         self.boot_time = datetime.datetime.fromtimestamp(psutil.boot_time()).strftime(
             "%Y-%m-%d %H:%M:%S"
         )
-        self.version_info = psutil.version_info
 
         # Generate string
 
@@ -239,7 +280,7 @@ class InlineSystemInfoMod(loader.Module):
             "Sensors": self.sensors_string(),
         }
 
-    async def serverstatscmd(self, message):
+    async def systeminfocmd(self, message):
         """Get information about your server"""
         await self.inline.form(
             text=self.cpu_string(),
