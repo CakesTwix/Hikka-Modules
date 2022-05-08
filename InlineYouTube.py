@@ -8,18 +8,18 @@
 
 """
 
+__version__ = (1, 0, 1)
+
 # meta pic: https://img.icons8.com/fluency/50/000000/youtube.png
 # meta developer: @CakesTwix
-# requires: yt_dlp requests
+# requires: yt_dlp
 # scope: hikka_min 1.1.11
 # scope: hikka_only 
 
 import asyncio
 import logging
 import os
-import tempfile
 
-import requests
 import yt_dlp
 from telethon.tl.types import Message
 
