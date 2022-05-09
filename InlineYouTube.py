@@ -8,13 +8,13 @@
 
 """
 
-__version__ = (1, 0, 1)
+__version__ = (1, 1, 0)
 
 # meta pic: https://img.icons8.com/fluency/50/000000/youtube.png
 # meta developer: @CakesTwix
 # requires: yt_dlp
 # scope: hikka_min 1.1.11
-# scope: hikka_only 
+# scope: hikka_only
 
 import asyncio
 import logging
@@ -29,21 +29,12 @@ from ..inline.types import InlineCall
 logger = logging.getLogger(__name__)
 
 
-def bytes2human(n):
-    # http://code.activestate.com/recipes/578019
-    # >>> bytes2human(10000)
-    # '9.8K'
-    # >>> bytes2human(100001221)
-    # '95.4M'
-    symbols = ("K", "M", "G", "T", "P", "E", "Z", "Y")
-    prefix = {}
-    for i, s in enumerate(symbols):
-        prefix[s] = 1 << (i + 1) * 10
-    for s in reversed(symbols):
-        if n >= prefix[s]:
-            value = float(n) / prefix[s]
-            return "%.1f%s" % (value, s)
-    return "%sB" % n
+def bytes2human(num, suffix="B"):
+    for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
+        if abs(num) < 1024.0:
+            return f"{num:3.1f}{unit}{suffix}"
+        num /= 1024.0
+    return f"{num:.1f}Yi{suffix}"
 
 
 def progressbar(iteration: int, length: int) -> str:
@@ -61,13 +52,14 @@ class YouTubeMod(loader.Module):
         "args": "🎞 <b>You need to specify link</b>",
         "downloading": "🎞 <b>Downloading...</b>",
         "not_found": "🎞 <b>Video not found...</b>",
+        "no_qualt":"No quality",
         "format": "<b>Format</b>:",
         "ext": "<b>Ext</b>:",
         "video_codec": "<b>Video codec</b>:",
         "audio": "Audio",
         "file_size": "<b>File size</b>:",
         "uploading": "<b>Uploading File... Progress</b>",
-        "downloading": "<b>Downloading File...</b>"
+        "downloading": "<b>Downloading File...</b>",
     }
 
     strings_ru = {
@@ -75,13 +67,14 @@ class YouTubeMod(loader.Module):
         "args": "🎞 <b>Вам необходимо указать ссылку</b>",
         "downloading": "🎞 <b>Загружаю...</b>",
         "not_found": "🎞 <b>Видео не найдено...</b>",
+        "no_qualt":"Нету такого качества",
         "format": "<b>Формат</b>:",
         "ext": "<b>Расширение</b>:",
         "video_codec": "<b>Видео кодек</b>:",
         "audio": "Аудио",
         "file_size": "<b>Размер</b>:",
         "uploading": "<b>Закачка файла... Прогресс</b>",
-        "downloading": "<b>Загружаю файл...</b>"
+        "downloading": "<b>Загружаю файл...</b>",
     }
 
     async def client_ready(self, client, db):
@@ -90,39 +83,58 @@ class YouTubeMod(loader.Module):
 
     @loader.unrestricted
     async def ytcmd(self, message: Message):
-        """<link> - Download video from youtube"""
-        args = utils.get_args_raw(message)
+        """[quality(144p/720p/etc)] <link> - Download video from youtube"""
+        args = utils.get_args(message)
         await utils.answer(message, self.strings("downloading"))
 
         if not args:
             return await utils.answer(message, self.strings("args"))
 
         with yt_dlp.YoutubeDL() as ydl:
-            info_dict = ydl.extract_info(args, download=False)
+            info_dict = ydl.extract_info(
+                args[1] if len(args) >= 2 else args[0], download=False
+            )
             formats_list = []
             for item in info_dict["formats"]:
                 if item["ext"] in ["mp4", "webm"] and item["vcodec"] != "none":
-                    formats_list.append(
-                        {
-                            "text": f"{item['format_note']} ({item['video_ext']})",
-                            "callback": self.format_change,
-                            "args": (
-                                item,
-                                info_dict,
-                                message.chat.id,
-                                item["format_id"],
-                            ),
-                        }
-                    )
+                    if len(args) >= 2:
+                        if args[0] == item["format_note"]:
+                            formats_list.append(
+                                {
+                                    "text": f"{item['format_note']} ({item['video_ext']})",
+                                    "callback": self.format_change,
+                                    "args": (
+                                        item,
+                                        info_dict,
+                                        message.chat.id,
+                                        item["format_id"],
+                                    ),
+                                }
+                            )
+                    else:
+                        formats_list.append(
+                            {
+                                "text": f"{item['format_note']} ({item['video_ext']})",
+                                "callback": self.format_change,
+                                "args": (
+                                    item,
+                                    info_dict,
+                                    message.chat.id,
+                                    item["format_id"],
+                                ),
+                            }
+                        )
 
             caption = f"<b>{info_dict['title']}</b>\n\n"
             # caption += info_dict["description"]
+            
             await self.inline.form(
-                text=caption,
-                photo=f"https://img.youtube.com/vi/{info_dict['id']}/maxresdefault.jpg",
+                text=caption if len(formats_list) != 0 else self.strings["no_qualt"],
+                photo=f"https://img.youtube.com/vi/{info_dict['id']}/0.jpg",
                 message=message,
                 reply_markup=utils.chunks(formats_list, 2),
             )
+            
 
     async def format_change(
         self,
