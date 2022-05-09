@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 2, 3)
+__version__ = (1, 3, 0)
 
 # requires: aiohttp
 # meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
@@ -23,6 +23,8 @@ import asyncio
 import logging
 import ast
 import telethon
+from aiogram.types import InputFile
+from aiogram.utils.markdown import hlink
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +71,7 @@ class ImageBoardSenderMod(loader.Module):
         "btn_menu_Questionable": "Questionable",
         "btn_menu_Explicit": "Explicit",
         "btn_menu_autostart_on": "✅ Autostart",
-        "btn_menu_autostart_off": "❌ Autostart"
+        "btn_menu_autostart_off": "❌ Autostart",
     }
 
     strings_ru = {
@@ -95,7 +97,7 @@ class ImageBoardSenderMod(loader.Module):
         "btn_menu_Questionable": "Под вопросом",
         "btn_menu_Explicit": "Откровенное 18+",
         "btn_menu_autostart_on": "✅ Автостарт",
-        "btn_menu_autostart_off": "❌ Автостарт"
+        "btn_menu_autostart_off": "❌ Автостарт",
     }
 
     rating = {"e": "Explicit 🔴", "q": "Questionable 🟡", "s": "Safe 🟢"}
@@ -117,10 +119,11 @@ class ImageBoardSenderMod(loader.Module):
     # Check channel rights
     async def check_entity(self) -> bool:
         try:
-            self.entity = await self._client.get_entity(self.config["CONFIG_CHANNEL"])
-            if not isinstance(self.entity, telethon.types.Channel):
-                self.entity = None
-                return False
+            if not self.entity:
+                self.entity = await self._client.get_entity(self.config["CONFIG_CHANNEL"])
+                if not isinstance(self.entity, telethon.types.Channel):
+                    self.entity = None
+                    return False
         except ValueError:
             self.entity = None
             return False
@@ -179,11 +182,11 @@ class ImageBoardSenderMod(loader.Module):
                     "callback": self.start_posting,
                 },
                 {
-                    "text": self.strings['btn_menu_autostart_on']
+                    "text": self.strings["btn_menu_autostart_on"]
                     if self._db.get(self.strings["name"], "autostart")
                     else self.strings["btn_menu_autostart_off"],
                     "callback": self.change_autostart,
-                }
+                },
             ]
             if await self.check_entity()
             else [],
@@ -192,13 +195,13 @@ class ImageBoardSenderMod(loader.Module):
                     "text": self.strings["btn_menu_update"],
                     "callback": self.update_channel_status,
                 }
-            ]
+            ],
         ]
 
     # Just async init
     async def _init(self) -> None:
         await self.check_entity()
-
+        bot_info = await self.inline.bot.get_me()
         if self.config["CONFIG_CHANNEL"] == "@notset":
             return
 
@@ -208,6 +211,23 @@ class ImageBoardSenderMod(loader.Module):
             + rating_string(self._db.get(self.strings["name"], "rating"))
             + self.config["CONFIG_TAGS"]
         )
+
+        try:
+            channel_bot = await self._client.edit_admin(self.config["CONFIG_CHANNEL"],
+                user=bot_info.username,
+                change_info=False,
+                post_messages=True,
+                edit_messages=True,
+                delete_messages=True,
+                ban_users=False,
+                invite_users=False,
+                pin_messages=True,
+                add_admins=False,)
+            logger.info(f"[{self.strings['name']}] Bot added")
+        except ValueError:
+            channel_bot = None
+            logger.warning(f"[{self.strings['name']}] Check channel username")
+
         async with aiohttp.ClientSession() as session:
             async with session.get(self.url + params) as get:
                 art_data = await get.json()
@@ -221,25 +241,27 @@ class ImageBoardSenderMod(loader.Module):
         self._client = client
 
         await self._init()
-        
-        if self._db.get(self.strings["name"], "rating") == None and self._db.get(self.strings["name"], "autostart") == None:
+
+        if (
+            self._db.get(self.strings["name"], "rating") == None
+            and self._db.get(self.strings["name"], "autostart") == None
+        ):
             self._db.set(self.strings["name"], "rating", [False, False, False])
             self._db.set(self.strings["name"], "autostart", False)
-
 
     async def on_unload(self) -> None:
         try:
             self.loop__send_arts.stop()
         except Exception:
             pass
-    
+
     # Caption
     def string_builder(self, json):
         string = f"Tags : {json['tags']}\n"
         string += f'©️ : {json["author"] or "No author"}\n'
         string += f'🔗 : {json["source"] or "No source"}\n'
         string += f"Rating : {self.rating[json['rating']]}\n\n"
-        string += (f"🆔 : <a href=https://yande.re/post/show/{json['id']}>{json['id']}</a>")  # fmt: skip
+        string += ("🆔 : " + hlink(str(json['id']), 'https://yande.re/post/show/' + str(json['id'])))  # fmt: skip
 
         return string
 
@@ -322,6 +344,7 @@ class ImageBoardSenderMod(loader.Module):
     async def start_posting(self, call) -> None:
         if not self.loop__send_arts.status:
             self.loop__send_arts.start()
+            await asyncio.sleep(0.5) # Otherwise the button does not update
             await self.update_channel_status(call)
 
     async def stop_posting(self, call) -> None:
@@ -330,7 +353,11 @@ class ImageBoardSenderMod(loader.Module):
             await self.update_channel_status(call)
 
     async def change_autostart(self, call) -> None:
-        self._db.set(self.strings["name"], "autostart", not self._db.get(self.strings["name"], "autostart"))
+        self._db.set(
+            self.strings["name"],
+            "autostart",
+            not self._db.get(self.strings["name"], "autostart"),
+        )
         await self.update_channel_status(call)
 
     # General loop #
@@ -340,9 +367,11 @@ class ImageBoardSenderMod(loader.Module):
         """Auto-Posting"""
         params = (
             "?tags="
-            + rating_string(self._db.get(self.strings["name"], "rating"))
+            + rating_string(self._db.get(self.strings["name"], "rating")) 
+            + " "
             + self.config["CONFIG_TAGS"]
         )
+
         async with aiohttp.ClientSession() as session:
             async with session.get(self.url + params) as get:
                 art_data = await get.json()
@@ -355,11 +384,23 @@ class ImageBoardSenderMod(loader.Module):
         for item in reversed(art_data):
             if item["id"] > self.last_id:
                 try:
-                    await self._client.send_file(
-                        self.entity,
-                        item["sample_url"],
-                        caption=self.string_builder(item),
+
+                    # await self._client.send_file(
+                    #    self.entity,
+                    #    item["sample_url"],
+                    #    caption=self.string_builder(item),
+                    # )
+
+                    await self.inline.bot.send_photo(
+                        self.config['CONFIG_CHANNEL'],
+                        InputFile.from_url(item["sample_url"]),
+                        self.string_builder(item),
+                        parse_mode="HTML",
+                        reply_markup=self.inline._generate_markup(
+                            [{"text": "Full", "url": item["file_url"]}]
+                        ),
                     )
+
                 except Exception as e:
                     logger.error(str(e))
 
