@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 1, 0)
+__version__ = (1, 1, 1)
 
 # meta pic: https://img.icons8.com/fluency/50/000000/youtube.png
 # meta developer: @CakesTwix
@@ -19,7 +19,7 @@ __version__ = (1, 1, 0)
 import asyncio
 import logging
 import os
-
+from yt_dlp.utils import DownloadError
 import yt_dlp
 from telethon.tl.types import Message
 
@@ -30,11 +30,14 @@ logger = logging.getLogger(__name__)
 
 
 def bytes2human(num, suffix="B"):
-    for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
-        if abs(num) < 1024.0:
-            return f"{num:3.1f}{unit}{suffix}"
-        num /= 1024.0
-    return f"{num:.1f}Yi{suffix}"
+    if num:
+        for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
+            if abs(num) < 1024.0:
+                return f"{num:3.1f}{unit}{suffix}"
+            num /= 1024.0
+        return f"{num:.1f}Yi{suffix}"
+    else: 
+        return 0
 
 
 def progressbar(iteration: int, length: int) -> str:
@@ -91,9 +94,13 @@ class YouTubeMod(loader.Module):
             return await utils.answer(message, self.strings("args"))
 
         with yt_dlp.YoutubeDL() as ydl:
-            info_dict = ydl.extract_info(
-                args[1] if len(args) >= 2 else args[0], download=False
-            )
+            try:
+                info_dict = ydl.extract_info(
+                    args[1] if len(args) >= 2 else args[0], download=False
+                )
+            except DownloadError as e:
+                return await utils.answer(message, e.msg)
+
             formats_list = []
             for item in info_dict["formats"]:
                 if item["ext"] in ["mp4", "webm"] and item["vcodec"] != "none":
