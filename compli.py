@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 0, 0)
+__version__ = (1, 0, 1)
 
 # meta pic: https://www.freeiconspng.com/uploads/facebook-circle-heart-love-png-4.png
 # meta developer: @CakesTwix
@@ -75,7 +75,7 @@ class CompliMod(loader.Module):
                     self.better = "Самый"
                 
         for compl in self.strings["compliments_" + self.gender].split():
-            await utils.answer(message, f"{self.better} {compl} {self.config['emoji']}")
+            message = await utils.answer(message, f"{self.better} {compl} {self.config['emoji']}")
             await asyncio.sleep(self.delay)
 
         
