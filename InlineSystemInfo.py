@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 1, 1)
+__version__ = (1, 1, 2)
 
 # requires: psutil py-cpuinfo
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
@@ -287,19 +287,19 @@ class InlineSystemInfoMod(loader.Module):
         self.cpu_freq = psutil.cpu_freq()
         self.cpu_info = cpuinfo.get_cpu_info()
 
+        # Network
+        self.net_if_addrs = psutil.net_if_addrs()
+        self.net_if_stats = psutil.net_if_stats()
+    
+    def update_data(self):
         # Memory
         self.virtual_memory = psutil.virtual_memory()
         self.swap_memory = psutil.swap_memory()
-
-        # Network
-        self.net_if_addrs = psutil.net_if_addrs()
 
         # Sensors
         self.sensors_temperatures = psutil.sensors_temperatures()
         self.sensors_fans = psutil.sensors_fans()
         # self.sensors_battery = psutil.sensors_battery()
-
-        self.version_info = psutil.version_info
 
         # CPU stuff
         self.cpu_percent = psutil.cpu_percent(interval=None)
@@ -310,19 +310,12 @@ class InlineSystemInfoMod(loader.Module):
         # Disks
         self.disk_partitions = psutil.disk_partitions()
 
-        # Network
-        self.net_if_stats = psutil.net_if_stats()
-
-        # Sensors
-        self.sensors_battery = psutil.sensors_battery()
-
         # Other
         self.boot_time = datetime.datetime.fromtimestamp(psutil.boot_time()).strftime(
             "%Y-%m-%d %H:%M:%S"
         )
 
         # Generate string
-
         self.info_string = {
             "CPU": self.cpu_string(),
             "Disk": self.disks_string(),
@@ -335,10 +328,12 @@ class InlineSystemInfoMod(loader.Module):
     
     async def client_ready(self, client, db) -> None:
         if utils.get_named_platform() == "🕶 Termux":
-            raise loader.LoadError("Thermux is not supported")
+            raise loader.LoadError("Termux is not supported")
 
     async def systeminfocmd(self, message):
         """Get information about your server"""
+        await utils.run_sync(self.update_data)
+
         await self.inline.form(
             text=self.cpu_string(),
             message=message,
