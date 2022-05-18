@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 1, 0)
+__version__ = (1, 1, 1)
 
 # requires: psutil py-cpuinfo
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
@@ -37,10 +37,13 @@ def remove_empty_lines(string_with_empty_lines):
     string_without_empty_lines = ""
     for line in non_empty_lines:
         string_without_empty_lines += line + "\n"
-    
+
     return string_without_empty_lines
 
-backslash = '\n'
+
+backslash = "\n"
+
+
 def get_os_release():
     if not exists("/etc/os-release"):
         return False
@@ -48,12 +51,13 @@ def get_os_release():
     list_ = []
     with open("/etc/os-release") as f:
         for item in f.readlines():
-            list_.append(item.split('='))
+            list_.append(item.split("="))
     dict_ = {}
     for item in list_:
-        dict_[item[0]] = item[1].replace(backslash,'').replace('"', '')
-    
+        dict_[item[0]] = item[1].replace(backslash, "").replace('"', "")
+
     return dict_
+
 
 # https://stackoverflow.com/questions/2756737/check-linux-distribution-name
 def get_distro():
@@ -65,6 +69,7 @@ def get_distro():
 
     with open("/etc/issue") as f:
         return f.read().split()[0]
+
 
 def progressbar(iteration: int, length: int) -> str:
     percent = ("{0:." + str(1) + "f}").format(100 * (iteration / float(100)))
@@ -108,35 +113,33 @@ class InlineSystemInfoMod(loader.Module):
 
     def menu_keyboard(self) -> list:
         keyboard = [
-            {"text": "🧠 CPU", "callback": self.change_stuff, "args": ("CPU",)},
-            {"text": "🐧 Linux", "callback": self.change_stuff, "args": ("Linux",)},
-            {
-                "text": "🌐 Network Address",
-                "callback": self.change_stuff,
-                "args": ("Network Address",),
-            },
-            {"text": "🗄 Memory", "callback": self.change_stuff, "args": ("Memory",)},
-        ]
-        if self.sensors_temperatures or self.sensors_fans:
-            keyboard.append(
+            [
+                {"text": "🧠 CPU", "callback": self.change_stuff, "args": ("CPU",)},
+                {"text": "🐧 Linux", "callback": self.change_stuff, "args": ("Linux",)},
                 {
-                    "text": "🌡 Sensors",
+                    "text": "🗄 Memory",
                     "callback": self.change_stuff,
-                    "args": ("Sensors",),
-                }
-            )
-
-        if utils.get_named_platform() != "🕶 Termux":
-            keyboard.append(
+                    "args": ("Memory",),
+                },
+            ],
+            [
+                {
+                    "text": "🌐 Network Address",
+                    "callback": self.change_stuff,
+                    "args": ("Network Address",),
+                },
                 {
                     "text": "🌐 Network Stats",
                     "callback": self.change_stuff,
                     "args": ("Network Stats",),
                 },
-            )
-            keyboard.append(
-                {"text": "💽 Disk", "callback": self.change_stuff, "args": ("Disk",)}
-            )
+            ],
+            [
+                {"text": "💽 Disk", "callback": self.change_stuff, "args": ("Disk",)},
+                {"text": "🌡 Sensors", "callback": self.change_stuff, "args": ("Sensors",)} if self.sensors_temperatures or self.sensors_fans else {}
+            ],
+            [{"text": "🚫 Close", "callback": self.inline__close}]
+        ]
 
         return keyboard
 
@@ -274,7 +277,6 @@ class InlineSystemInfoMod(loader.Module):
         Support: {os_release["SUPPORT_URL"]}
         Bug Report: {os_release["BUG_REPORT_URL"]}
             """
-        
 
         return remove_empty_lines(string)
 
@@ -298,18 +300,6 @@ class InlineSystemInfoMod(loader.Module):
         # self.sensors_battery = psutil.sensors_battery()
 
         self.version_info = psutil.version_info
-
-        self.info_string = {
-            "CPU": self.cpu_string(),
-            "Network Address": self.network_addr_string(),
-            "Memory": self.memory_string(),
-            "Sensors": self.sensors_string(),
-            "Linux": self.linux_string(),
-        }
-
-        # Termux is shit
-        if utils.get_named_platform() == "🕶 Termux":
-            return
 
         # CPU stuff
         self.cpu_percent = psutil.cpu_percent(interval=None)
@@ -342,19 +332,23 @@ class InlineSystemInfoMod(loader.Module):
             "Sensors": self.sensors_string(),
             "Linux": self.linux_string(),
         }
+    
+    async def client_ready(self, client, db) -> None:
+        if utils.get_named_platform() == "🕶 Termux":
+            raise loader.LoadError("Thermux is not supported")
 
     async def systeminfocmd(self, message):
         """Get information about your server"""
         await self.inline.form(
             text=self.cpu_string(),
             message=message,
-            reply_markup=chunks(self.menu_keyboard(), 2),
+            reply_markup=self.menu_keyboard(),
         )
 
     # Inline callback
 
     async def change_stuff(self, call, stuff):
-        await call.edit(
-            text=self.info_string[stuff],
-            reply_markup=chunks(self.menu_keyboard(), 2),
-        )
+        await call.edit(text=self.info_string[stuff], reply_markup=self.menu_keyboard())
+
+    async def inline__close(self, call) -> None:
+        await call.delete()
