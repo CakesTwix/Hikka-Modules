@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 1, 2)
+__version__ = (1, 1, 3)
 
 # requires: psutil py-cpuinfo
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
@@ -136,10 +136,12 @@ class InlineSystemInfoMod(loader.Module):
             ],
             [
                 {"text": "💽 Disk", "callback": self.change_stuff, "args": ("Disk",)},
-                {"text": "🌡 Sensors", "callback": self.change_stuff, "args": ("Sensors",)} if self.sensors_temperatures or self.sensors_fans else {}
             ],
             [{"text": "🚫 Close", "callback": self.inline__close}]
         ]
+
+        if self.sensors_temperatures or self.sensors_fans:
+            keyboard[2].append({"text": "🌡 Sensors", "callback": self.change_stuff, "args": ("Sensors",)})
 
         return keyboard
 
