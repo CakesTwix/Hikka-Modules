@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 0, 0)
+__version__ = (1, 1, 0)
 
 # requires: aiohttp
 # meta pic: https://netacad.mpei.ru/wp-content/uploads/linux_un.png
@@ -123,26 +123,61 @@ class LinuxPackagesMod(loader.Module):
                 package["results"][0]["Maintainer"]
             )
 
-        btn = [
-            [
-                {
-                    "text": "AUR",
-                    "url": "https://aur.archlinux.org/packages/" + Name,
-                },
-                {
-                    "text": "Download snapshot",
-                    "url": "https://aur.archlinux.org"
-                    + package["results"][0]["URLPath"],
-                },
-            ],
-            [
-                {
-                    "text": "Back",
-                    "callback": self.inline__back,
-                    "args": [search_arg, "AUR"],
-                }
-            ],
-        ]
+            btn = [
+                [
+                    {
+                        "text": "AUR",
+                        "url": f"https://aur.archlinux.org/packages/{Name}",
+                    },
+                    {
+                        "text": "Download snapshot",
+                        "url": "https://aur.archlinux.org"
+                        + package["results"][0]["URLPath"],
+                    },
+                ],
+                [
+                    {
+                        "text": "Back",
+                        "callback": self.inline__back,
+                        "args": [search_arg, "AUR"],
+                    }
+                ],
+            ]
+
+        elif _type == "pacman":
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"https://www.archlinux.org/packages/search/json/?q={Name}"
+                ) as get:
+                    if get.ok:
+                        package = await get.json()
+                    else:
+                        await utils.answer(message, self.strings["general_error"])
+                        return await asyncio.sleep(5)
+            string = self.strings["info_about"].format(Name)
+            string += self.strings["ver"].format(package["results"][0]["pkgver"])
+            string += self.strings["description"].format(
+                package["results"][0]["pkgdesc"]
+            )
+            string += self.strings["maintainer"].format(
+                package["results"][0]["maintainers"][0]
+            )
+
+            btn = [
+                [
+                    {
+                        "text": "Pacman",
+                        "url": f"https://archlinux.org/packages/{package['results'][0]['repo']}/{package['results'][0]['arch']}/{package['results'][0]['pkgname']}",
+                    },
+                ],
+                [
+                    {
+                        "text": "Back",
+                        "callback": self.inline__back,
+                        "args": [search_arg, "pacman"],
+                    }
+                ],
+            ]
 
         await call.edit(
             text=string,
@@ -151,25 +186,60 @@ class LinuxPackagesMod(loader.Module):
         )
 
     async def inline__back(self, call: CallbackQuery, Name: str, _type: str) -> None:
-        if _type != "AUR":
-            return
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"https://aur.archlinux.org/rpc/?v=5&type=search&arg={Name}"
-            ) as get:
-                if get.ok:
-                    packages = await get.json()
+        if _type == "AUR":
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"https://aur.archlinux.org/rpc/?v=5&type=search&arg={Name}"
+                ) as get:
+                    if get.ok:
+                        packages = await get.json()
+
+                        i = 1
+                        reply_markup = []
+                        string = self.strings["string_list"].format("AUR")
+                        for package in packages["results"]:
+                            string += f"{i}. {package['Name']}(v{package['Version']})\n"
+                            reply_markup.append(
+                                {
+                                    "text": str(i),
+                                    "callback": self.inline__get_package,
+                                    "args": [package["Name"], "AUR", Name],
+                                }
+                            )
+
+                            if i >= 10:
+                                break
+
+                            i = i + 1
+
+                        await call.edit(
+                            text=string,
+                            reply_markup=chunks(reply_markup, 5),
+                            force_me=False,  # optional: Allow other users to access form (all)
+                        )
+                    else:
+                        await utils.answer(message, self.strings["general_error"])
+                        return await asyncio.sleep(5)
+        elif _type == "pacman":
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"https://www.archlinux.org/packages/search/json/?q={Name}"
+                ) as get:
+                    if get.ok:
+                        packages = await get.json()
+                    if len(packages["results"]) == 0:
+                        return await utils.answer(message, self.strings["no_packages"])
 
                     i = 1
                     reply_markup = []
-                    string = self.strings["string_list"].format("AUR")
+                    string = self.strings["string_list"].format("pacman")
                     for package in packages["results"]:
-                        string += f"{i}. {package['Name']}(v{package['Version']})\n"
+                        string += f"{i}. {package['pkgname']}(v{package['pkgver']})\n"
                         reply_markup.append(
                             {
                                 "text": str(i),
                                 "callback": self.inline__get_package,
-                                "args": [package["Name"], "AUR", Name],
+                                "args": [package["pkgname"], "pacman", Name],
                             }
                         )
 
@@ -178,11 +248,45 @@ class LinuxPackagesMod(loader.Module):
 
                         i = i + 1
 
-                    await call.edit(
-                        text=string,
-                        reply_markup=chunks(reply_markup, 5),
-                        force_me=False,  # optional: Allow other users to access form (all)
+                await call.edit(
+                    text=string,
+                    reply_markup=chunks(reply_markup, 5),
+                    force_me=False,  # optional: Allow other users to access form (all)
+                )
+
+    async def pacmancmd(self, message):
+        """Pacman"""
+        if not (args := utils.get_args_raw(message)):
+            return
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                f"https://www.archlinux.org/packages/search/json/?q={args}"
+            ) as get:
+                if get.ok:
+                    packages = await get.json()
+                if len(packages["results"]) == 0:
+                    return await utils.answer(message, self.strings["no_packages"])
+
+                i = 1
+                reply_markup = []
+                string = self.strings["string_list"].format("pacman")
+                for package in packages["results"]:
+                    string += f"{i}. {package['pkgname']}(v{package['pkgver']})\n"
+                    reply_markup.append(
+                        {
+                            "text": str(i),
+                            "callback": self.inline__get_package,
+                            "args": [package["pkgname"], "pacman", args],
+                        }
                     )
-                else:
-                    await utils.answer(message, self.strings["general_error"])
-                    return await asyncio.sleep(5)
+
+                    if i >= 10:
+                        break
+                    i = i + 1
+
+            await self.inline.form(
+                text=string,
+                message=message,
+                reply_markup=chunks(reply_markup, 5),
+                force_me=False,  # optional: Allow other users to access form (all)
+            )

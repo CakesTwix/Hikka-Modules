@@ -299,42 +299,21 @@ class InlineWynnCraftInfoMod(loader.Module):
                 if get.status != 200:
                     return await utils.answer(message, self.strings["error_message"])
                 top_list = list(reversed(utils.chunks((await get.json())["data"],10))) # oh no, cringe code
-            
+
             string = f"{self.strings['top_list']}\n\n"
             for player in reversed(top_list[0]):
                 string += f"╭ <b>{player['name']} 🎮\n"
                 string += f"╰─ </b> LvL: <code>{player['level']}</code> / XP: <code>{player['xp']}</code> / Time: <code>{player['minPlayed']}</code>\n"
 
-            await self.inline.form(
-                text=string,
-                message=message,
-                reply_markup=utils.chunks([
-                {
-                    "text": str(i+1),
-                    "callback": self.inline__toplayer,
-                    "args": (top_list, i),
-                } for i in range(0,10)
-            ],5),
-                force_me=False,  # optional: Allow other users to access form (all)
-            )
+            await self.inline.form(text=string, message=message, reply_markup=utils.chunks([{"text": str(i + 1), "callback": self.inline__toplayer, "args": (top_list, i),} for i in range(10)], 5), force_me=False)
 
     async def inline__toplayer(self, call, top_list: list, num: int):
         string = f"{self.strings['top_list']}\n\n"
         for player in reversed(top_list[num]):
             string += f"╭ <b>{player['name']} 🎮\n"
             string += f"╰─ </b> LvL: <code>{player['level']}</code> / XP: <code>{player['xp']}</code> / Time: <code>{player['minPlayed']}</code>\n"
-        
-        await call.edit(
-                text=string,
-                reply_markup=utils.chunks([
-                {
-                    "text": str(i+1),
-                    "callback": self.inline__toplayer,
-                    "args": (top_list, i),
-                } for i in range(0,10)
-            ],5),
-                force_me=False,  # optional: Allow other users to access form (all)
-            )
+
+        await call.edit(text=string, reply_markup=utils.chunks([{"text": str(i + 1), "callback": self.inline__toplayer, "args": (top_list, i),} for i in range(10)], 5), force_me=False)
 
     async def inline__get_class(self, call, class_, player):
         await call.edit(

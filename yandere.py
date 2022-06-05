@@ -38,7 +38,7 @@ class MoebooruMod(loader.Module):
         "cfg_yandere_password_hash": "SHA1 hashed password",
     }
 
-strings = {
+    strings_ru = {
         "vote_login": "Неверный логин или пароль.",
         "vote_error": "ОШИБКА, .logs 40 или .logs error",
         "cfg_yandere_login": "Войти через yande.re",

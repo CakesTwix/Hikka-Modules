@@ -58,7 +58,7 @@ class SileroMod(loader.Module):
 
     async def client_ready(self, client, db) -> None:
         with open("/proc/cpuinfo") as f:
-            if not 'avx2' in f.read():
+            if 'avx2' not in f.read():
                 raise loader.LoadError(self.strings["no_avx2"])
 
 

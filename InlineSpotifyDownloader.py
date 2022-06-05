@@ -50,9 +50,9 @@ class InlineSpotifyDownloaderMod(loader.Module):
         """Download music from Spotify (Only tracks)"""
         if not (args := utils.get_args_raw(message)):
             return await utils.answer(message, self.strings["no_args"])
-        if not "https://open.spotify.com/track/" in args:
+        if "https://open.spotify.com/track/" not in args:
             return await utils.answer(message, self.strings["no_track"])
-        
+
         # Try write command
         await utils.answer(message, self.strings["downloading"])
         proc = await asyncio.create_subprocess_shell(

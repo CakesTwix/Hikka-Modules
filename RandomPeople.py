@@ -63,9 +63,7 @@ class RandomPeopleMod(loader.Module):
                 b  = (await get.json())["data"][0]
                 await session.close()
 
-        string = ""
-        for val, key in zip(b.values(), b.keys()):
-            string += f"<b>{self.strings[key]}</b>: <code>{val}</code>\n"
+        string = "".join(f"<b>{self.strings[key]}</b>: <code>{val}</code>\n" for val, key in zip(b.values(), b.keys()))
 
         await utils.answer(message, string)
         

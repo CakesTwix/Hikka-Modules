@@ -34,11 +34,7 @@ def remove_empty_lines(string_with_empty_lines):
     lines = string_with_empty_lines.split("\n")
     non_empty_lines = [line for line in lines if line.strip() != ""]
 
-    string_without_empty_lines = ""
-    for line in non_empty_lines:
-        string_without_empty_lines += line + "\n"
-
-    return string_without_empty_lines
+    return "".join(line + "\n" for line in non_empty_lines)
 
 
 backslash = "\n"
@@ -50,13 +46,8 @@ def get_os_release():
 
     list_ = []
     with open("/etc/os-release") as f:
-        for item in f.readlines():
-            list_.append(item.split("="))
-    dict_ = {}
-    for item in list_:
-        dict_[item[0]] = item[1].replace(backslash, "").replace('"', "")
-
-    return dict_
+        list_.extend(item.split("=") for item in f.readlines())
+    return {item[0]: item[1].replace(backslash, "").replace('"', "") for item in list_}
 
 
 # https://stackoverflow.com/questions/2756737/check-linux-distribution-name
