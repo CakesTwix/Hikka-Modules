@@ -8,14 +8,13 @@
 
 """
 
-__version__ = (1, 1, 3)
+__version__ = (1, 2, 0)
 
 # requires: psutil py-cpuinfo
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
 # meta developer: @CakesTwix
 # scope: inline
 # scope: hikka_min 1.1.2
-# scope: hikka_only
 
 import datetime
 import logging
@@ -81,9 +80,7 @@ def bytes2human(n):
     # >>> bytes2human(100001221)
     # '95.4M'
     symbols = ("K", "M", "G", "T", "P", "E", "Z", "Y")
-    prefix = {}
-    for i, s in enumerate(symbols):
-        prefix[s] = 1 << (i + 1) * 10
+    prefix = {s: 1 << (i + 1) * 10 for i, s in enumerate(symbols)}
     for s in reversed(symbols):
         if n >= prefix[s]:
             value = float(n) / prefix[s]
@@ -97,6 +94,9 @@ class InlineSystemInfoMod(loader.Module):
 
     strings = {
         "name": "InlineSystemInfo",
+    }
+
+    AddressFamily = {
         2: "IPv4",
         10: "IPv6",
         17: "Link",
@@ -182,11 +182,10 @@ class InlineSystemInfoMod(loader.Module):
                     and not a.startswith("_")
                     and not callable(getattr(psutil.net_if_addrs()[interf][0], a))
                 ]
-                string += f"{self.strings[getattr(addr, 'family')]}\n"
+                string += f"{self.AddressFamily[getattr(addr, 'family')]}\n"
                 for item in attr[:-1]:
                     string += f"├── {item}: {getattr(addr, item)}\n"
-                else:
-                    string += f"└── {attr[-1]}: {getattr(addr, attr[-1])}\n"
+                string += f"└── {attr[-1]}: {getattr(addr, attr[-1])}\n"
             string += "\n"
 
         return string
@@ -320,8 +319,12 @@ class InlineSystemInfoMod(loader.Module):
         }
     
     async def client_ready(self, client, db) -> None:
-        if utils.get_named_platform() == "🕶 Termux":
-            raise loader.LoadError("Termux is not supported")
+        if hasattr(self, "hikka"):
+            if utils.get_named_platform() == "🕶 Termux":
+                raise loader.LoadError("Termux is not supported")
+        else:
+            if utils.get_platform_name() == "📱 Termux":
+                raise loader.LoadError("Termux is not supported")
 
     async def systeminfocmd(self, message):
         """Get information about your server"""
