@@ -8,13 +8,12 @@
 
 """
 
-__version__ = (1, 1, 0)
+__version__ = (1, 2, 0)
 
 # requires: aiohttp timeago
 # meta pic: https://b.thumbs.redditmedia.com/-cDkj6PuQHqdLEhPh1JYsYplTArOOUuBnKs5FC8sgKs.png
 # meta developer: @CakesTwix
 # scope: inline
-# scope: hikka_only
 
 import logging
 import uuid
@@ -28,6 +27,10 @@ from .. import loader, utils  # noqa
 
 logger = logging.getLogger(__name__)
 
+# From Hikka https://github.com/hikariatama/Hikka/blob/master/hikka/utils.py#L459-L461
+def chunks(_list: Union[list, tuple, set], n: int, /) -> list:
+    """Split provided `_list` into chunks of `n`"""
+    return [_list[i : i + n] for i in range(0, len(_list), n)]
 
 @loader.tds
 class InlineWynnCraftInfoMod(loader.Module):
@@ -287,7 +290,7 @@ class InlineWynnCraftInfoMod(loader.Module):
         await self.inline.form(
             text=self.general_info_builder(user),
             message=message,
-            reply_markup=utils.chunks(self.keyboard_class_builder(user), 3),
+            reply_markup=chunks(self.keyboard_class_builder(user), 3),
             photo=f"https://wynndata.tk/gen/stats/{args}.png",
             force_me=False,  # optional: Allow other users to access form (all)
         )
@@ -298,14 +301,14 @@ class InlineWynnCraftInfoMod(loader.Module):
             async with session.get(f"{self.wynncraft_api}leaderboards/player/overall/all") as get:
                 if get.status != 200:
                     return await utils.answer(message, self.strings["error_message"])
-                top_list = list(reversed(utils.chunks((await get.json())["data"],10))) # oh no, cringe code
+                top_list = list(reversed(chunks((await get.json())["data"],10))) # oh no, cringe code
 
             string = f"{self.strings['top_list']}\n\n"
             for player in reversed(top_list[0]):
                 string += f"╭ <b>{player['name']} 🎮\n"
                 string += f"╰─ </b> LvL: <code>{player['level']}</code> / XP: <code>{player['xp']}</code> / Time: <code>{player['minPlayed']}</code>\n"
 
-            await self.inline.form(text=string, message=message, reply_markup=utils.chunks([{"text": str(i + 1), "callback": self.inline__toplayer, "args": (top_list, i),} for i in range(10)], 5), force_me=False)
+            await self.inline.form(text=string, message=message, reply_markup=chunks([{"text": str(i + 1), "callback": self.inline__toplayer, "args": (top_list, i),} for i in range(10)], 5), force_me=False)
 
     async def inline__toplayer(self, call, top_list: list, num: int):
         string = f"{self.strings['top_list']}\n\n"
@@ -313,7 +316,7 @@ class InlineWynnCraftInfoMod(loader.Module):
             string += f"╭ <b>{player['name']} 🎮\n"
             string += f"╰─ </b> LvL: <code>{player['level']}</code> / XP: <code>{player['xp']}</code> / Time: <code>{player['minPlayed']}</code>\n"
 
-        await call.edit(text=string, reply_markup=utils.chunks([{"text": str(i + 1), "callback": self.inline__toplayer, "args": (top_list, i),} for i in range(10)], 5), force_me=False)
+        await call.edit(text=string, reply_markup=chunks([{"text": str(i + 1), "callback": self.inline__toplayer, "args": (top_list, i),} for i in range(10)], 5), force_me=False)
 
     async def inline__get_class(self, call, class_, player):
         await call.edit(
@@ -330,5 +333,5 @@ class InlineWynnCraftInfoMod(loader.Module):
     async def inline__back(self, call, player):
         await call.edit(
             text=self.general_info_builder(player),
-            reply_markup=utils.chunks(self.keyboard_class_builder(player), 3),
+            reply_markup=chunks(self.keyboard_class_builder(player), 3),
         )
