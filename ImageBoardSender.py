@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (2, 1, 0) # BETA
+__version__ = (2, 1, 1) # BETA
 
 # requires: aiohttp pydantic
 # meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
@@ -127,7 +127,7 @@ class ImageBoardSenderMod(loader.Module):
     strings = {
         "cfg_channel": "Сhannel variable where the content will be posted",
         "cfg_tags": "Filtering art by tags",
-        "name": "ImageBoardSender",
+        "name": "👦 ImageBoardSender",
         "no_chennel": "Channel does not exist",
         "ok": "Everything is okay",
         "no_ok": "Everything not okay (maybe not admin rights)",
@@ -321,11 +321,11 @@ class ImageBoardSenderMod(loader.Module):
         self._db = db
         self._client = client
 
-        await self._init()
-
         None if self._db.get(self.strings["name"], "source") else self._db.set(self.strings["name"], "source", "Yandere")
         None if self._db.get(self.strings["name"], "rating") else self._db.set(self.strings["name"], "rating", [False, False, False])
         None if self._db.get(self.strings["name"], "autostart") else self._db.set(self.strings["name"], "autostart", False)
+
+        await self._init()
 
 
     async def on_unload(self) -> None:
