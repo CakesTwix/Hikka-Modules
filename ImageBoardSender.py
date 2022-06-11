@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (2, 0, 0) # BETA
+__version__ = (2, 1, 0) # BETA
 
 # requires: aiohttp pydantic
 # meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
@@ -348,7 +348,7 @@ class ImageBoardSenderMod(loader.Module):
     # Commands #
 
     async def channelmenucmd(self, message):
-        """Simple Menu and status"""
+        """🗒 Simple Menu and status"""
         string = f"{self.strings['channel_status']} {self.strings['ok'] if await self.check_entity() else self.strings['no_ok']}\n"
         string += f"{self.strings['channel_username']} {self.config['CONFIG_CHANNEL'] if self.config['CONFIG_CHANNEL'] != '@notset' else self.strings['change_channel_username']}\n"
         string += f"{self.strings['channel_tags']} {self.config['CONFIG_TAGS'] if self.config['CONFIG_TAGS'] != '' else self.strings['channel_no_tags']}\n"
@@ -360,15 +360,15 @@ class ImageBoardSenderMod(loader.Module):
         )
     
     async def artsourcecmd(self, message):   
-        """Change the source of art"""  
+        """🧑‍🎤 Change the source of art"""  
         await self.inline.form(
             text=self.strings["source"].format(self._db.get(self.strings["name"], "source")),
             message=message,
             reply_markup=utils.chunks(self.source_btn, 2),
         )
 
-    async def testsendcmd(self, message):   
-        """Debug"""  
+    async def latestartcmd(self, message):   
+        """⌚️ Sending the last art for now"""  
         params = (
             "?tags="
             + rating_string(self._db.get(self.strings["name"], "rating")) 
@@ -377,7 +377,6 @@ class ImageBoardSenderMod(loader.Module):
         )
         art_data = await self.sources[self._db.get(self.strings["name"], "source")].getLast(params)
         
-        logger.debug(art_data)
         await self.inline.bot.send_photo(
             self.config['CONFIG_CHANNEL'],
             InputFile.from_url(art_data[0].sample_url),
@@ -387,6 +386,30 @@ class ImageBoardSenderMod(loader.Module):
                 [{"text": "Full", "url": art_data[0].file_url}]
             ),
         )
+
+        await message.delete()
+
+    async def randomartcmd(self, message):   
+        """🎲 Sending a random art"""  
+        params = (
+            "?tags=order:random "
+            + rating_string(self._db.get(self.strings["name"], "rating")) 
+            + " "
+            + self.config["CONFIG_TAGS"]
+        )
+        art_data = await self.sources[self._db.get(self.strings["name"], "source")].getLast(params)
+        
+        await self.inline.bot.send_photo(
+            self.config['CONFIG_CHANNEL'],
+            InputFile.from_url(art_data[0].sample_url),
+            self.string_builder(art_data[0]),
+            parse_mode="HTML",
+            reply_markup=self.inline._generate_markup(
+                [{"text": "Full", "url": art_data[0].file_url}]
+            ),
+        )
+
+        await message.delete()
 
     # Inline callback handlers #
 
