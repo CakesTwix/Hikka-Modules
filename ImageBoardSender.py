@@ -8,9 +8,9 @@
 
 """
 
-__version__ = (1, 3, 0)
+__version__ = (2, 0, 0) # BETA
 
-# requires: aiohttp
+# requires: aiohttp pydantic
 # meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
 # meta developer: @CakesTwix
 # scope: inline
@@ -25,6 +25,8 @@ import ast
 import telethon
 from aiogram.types import InputFile
 from aiogram.utils.markdown import hlink
+from pydantic import BaseModel, Field
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -37,12 +39,86 @@ def rating_string(rating_list: list) -> str:
             + rating_str[[i for i, val in enumerate(rating_list) if not val][0]]
         )
     elif sum(rating_list) == 1:
-        return (
-            "rating:" + rating_str[[i for i, val in enumerate(rating_list) if val][0]]
-        )
+        return f"rating:{rating_str[[i for i, val in enumerate(rating_list) if val][0]]}"
+
     else:
         return ""
 
+# id: int                                | Айди
+# tag: str = Field(alias='tag_string')   | Теги
+# rating: str                            | Рейтинг
+# author: str                            | Автор
+# file_size: int                         | Размер без сжатия
+# sample_file_size: int                  | Размер со средним сжатием
+# file_url: str                          | Без сжатия
+# preview_file_url: str                  | Сильное сжатие
+# sample_url: Optional[str] = None       | Среднее сжатие
+# source: Optional[str] = None           | Откуда арт
+
+class BooruModel(BaseModel):
+    id: int
+    tag: str = Field(alias='tag_string_general')
+    rating: str
+    author: Optional[str] = None
+    file_size: int
+    sample_file_size: int = Field(alias='file_size')
+    file_url: str
+    preview_file_url: str = Field(alias='large_file_url')
+    sample_url: Optional[str] = Field(alias='large_file_url')
+    source: Optional[str] = None 
+
+
+class MoebooruModel(BaseModel):
+    id: int
+    tag: str = Field(alias='tags')
+    rating: str
+    author: Optional[str] = None
+    file_size: int
+    sample_file_size: int
+    file_url: str
+    preview_file_url: str = Field(alias='preview_url')
+    sample_url: Optional[str] = None
+    source: Optional[str] = None
+
+
+class Moebooru:
+    domain = 'yande.re'
+    get_url = f'https://{domain}' 
+    post_url = '/post.json' 
+
+    async def getLast(self, params):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.get_url + self.post_url + params) as get:
+                result = await get.json()
+                return [MoebooruModel(**item) for item in result]
+
+class Konachan_Net(Moebooru):
+    domain = 'konachan.net'
+    get_url = f'https://{domain}' 
+    post_url = '/post.json'
+
+class Lolibooru(Moebooru):
+    domain = 'lolibooru.moe'
+    get_url = f'https://{domain}'
+    post_url = '/post.json'
+
+# Very buggy :(
+class Booru: 
+    domain = 'danbooru.donmai.us'
+    get_url = f'https://{domain}'
+    post_url = '/posts.json'
+
+    async def getLast(self, params):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.get_url + self.post_url + params) as get:
+                result = await get.json()
+                list_art = []
+                for item in result:
+                    try:
+                        list_art.append(BooruModel(**item))
+                    except Exception as err:
+                        logger.debug(str(err)) # Fck Booru
+                return list_art
 
 @loader.tds
 class ImageBoardSenderMod(loader.Module):
@@ -72,6 +148,7 @@ class ImageBoardSenderMod(loader.Module):
         "btn_menu_Explicit": "Explicit",
         "btn_menu_autostart_on": "✅ Autostart",
         "btn_menu_autostart_off": "❌ Autostart",
+        "source": "<b>List of available sources. \nThe source used:</b> <code>{}</code>",
     }
 
     strings_ru = {
@@ -98,6 +175,7 @@ class ImageBoardSenderMod(loader.Module):
         "btn_menu_Explicit": "Откровенное 18+",
         "btn_menu_autostart_on": "✅ Автостарт",
         "btn_menu_autostart_off": "❌ Автостарт",
+        "source": "<b>Список доступных источников. \nИспользуемый источник:</b> <code>{}</code>",
     }
 
     rating = {"e": "Explicit 🔴", "q": "Questionable 🟡", "s": "Safe 🟢"}
@@ -115,6 +193,9 @@ class ImageBoardSenderMod(loader.Module):
 
         self.entity = None
         self.last_id = 0
+
+        self.sources = {"Yandere": Moebooru(), "Konachan.net": Konachan_Net(), "LoliBooru": Lolibooru()}
+        self.source_btn = [{"text": item, "callback": self.callback__change_source, "args": (item,)} for item in self.sources]
 
     # Check channel rights
     async def check_entity(self) -> bool:
@@ -223,7 +304,7 @@ class ImageBoardSenderMod(loader.Module):
                 invite_users=False,
                 pin_messages=True,
                 add_admins=False,)
-            logger.info(f"[{self.strings['name']}] Bot added")
+            logger.debug(f"[{self.strings['name']}] Bot added")
         except ValueError:
             channel_bot = None
             logger.warning(f"[{self.strings['name']}] Check channel username")
@@ -242,12 +323,10 @@ class ImageBoardSenderMod(loader.Module):
 
         await self._init()
 
-        if (
-            self._db.get(self.strings["name"], "rating") == None
-            and self._db.get(self.strings["name"], "autostart") == None
-        ):
-            self._db.set(self.strings["name"], "rating", [False, False, False])
-            self._db.set(self.strings["name"], "autostart", False)
+        None if self._db.get(self.strings["name"], "source") else self._db.set(self.strings["name"], "source", "Yandere")
+        None if self._db.get(self.strings["name"], "rating") else self._db.set(self.strings["name"], "rating", [False, False, False])
+        None if self._db.get(self.strings["name"], "autostart") else self._db.set(self.strings["name"], "autostart", False)
+
 
     async def on_unload(self) -> None:
         try:
@@ -257,11 +336,12 @@ class ImageBoardSenderMod(loader.Module):
 
     # Caption
     def string_builder(self, json):
-        string = f"Tags : {json['tags']}\n"
-        string += f'©️ : {json["author"] or "No author"}\n'
-        string += f'🔗 : {json["source"] or "No source"}\n'
-        string += f"Rating : {self.rating[json['rating']]}\n\n"
-        string += ("🆔 : " + hlink(str(json['id']), 'https://yande.re/post/show/' + str(json['id'])))  # fmt: skip
+        # Thanks to Фрося <3
+        string = f"Tags : {'#' + str.join(' #', json.tag.split())}\n"
+        string += f'©️ : {json.author or "No author"}\n'
+        string += f'🔗 : {json.source or "No source"}\n'
+        string += f"Rating : {self.rating[json.rating]}\n\n"
+        string += ("🆔 : " + str(json.id)) 
 
         return string
 
@@ -277,6 +357,35 @@ class ImageBoardSenderMod(loader.Module):
             text=string,
             message=message,
             reply_markup=await self.menu_keyboard(),
+        )
+    
+    async def artsourcecmd(self, message):   
+        """Change the source of art"""  
+        await self.inline.form(
+            text=self.strings["source"].format(self._db.get(self.strings["name"], "source")),
+            message=message,
+            reply_markup=utils.chunks(self.source_btn, 2),
+        )
+
+    async def testsendcmd(self, message):   
+        """Debug"""  
+        params = (
+            "?tags="
+            + rating_string(self._db.get(self.strings["name"], "rating")) 
+            + " "
+            + self.config["CONFIG_TAGS"]
+        )
+        art_data = await self.sources[self._db.get(self.strings["name"], "source")].getLast(params)
+        
+        logger.debug(art_data)
+        await self.inline.bot.send_photo(
+            self.config['CONFIG_CHANNEL'],
+            InputFile.from_url(art_data[0].sample_url),
+            self.string_builder(art_data[0]),
+            parse_mode="HTML",
+            reply_markup=self.inline._generate_markup(
+                [{"text": "Full", "url": art_data[0].file_url}]
+            ),
         )
 
     # Inline callback handlers #
@@ -360,6 +469,11 @@ class ImageBoardSenderMod(loader.Module):
         )
         await self.update_channel_status(call)
 
+    async def callback__change_source(self, call, source):
+        self._db.set(self.strings["name"], "source", source)
+        self.last_id = 0
+        await call.edit(text=self.strings["source"].format(self._db.get(self.strings["name"], "source")), reply_markup=utils.chunks(self.source_btn, 2))
+
     # General loop #
 
     @loader.loop(interval=60)
@@ -372,17 +486,18 @@ class ImageBoardSenderMod(loader.Module):
             + self.config["CONFIG_TAGS"]
         )
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(self.url + params) as get:
-                art_data = await get.json()
-                await session.close()
+        art_data = await self.sources[self._db.get(self.strings["name"], "source")].getLast(params)
 
+        if art_data == []:
+            logger.warning(f"[{self.strings['name']}] No arts, check tags")
+            return
+            
         if self.last_id == 0:
-            self.last_id = art_data[0]["id"]
+            self.last_id = art_data[0].id
             return
 
         for item in reversed(art_data):
-            if item["id"] > self.last_id:
+            if item.id > self.last_id:
                 try:
 
                     # await self._client.send_file(
@@ -393,18 +508,19 @@ class ImageBoardSenderMod(loader.Module):
 
                     await self.inline.bot.send_photo(
                         self.config['CONFIG_CHANNEL'],
-                        InputFile.from_url(item["sample_url"]),
+                        InputFile.from_url(item.sample_url),
                         self.string_builder(item),
                         parse_mode="HTML",
                         reply_markup=self.inline._generate_markup(
-                            [{"text": "Full", "url": item["file_url"]}]
+                            [{"text": "Full", "url": item.file_url}]
                         ),
                     )
+                    # break # DEBUG
 
                 except Exception as e:
                     logger.error(str(e))
 
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(1)
 
-        self.last_id = art_data[0]["id"]
+        self.last_id = art_data[0].id
         await asyncio.sleep(5 * 60)
