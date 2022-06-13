@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 2, 0)
+__version__ = (1, 2, 1)
 
 # requires: psutil py-cpuinfo
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
@@ -142,7 +142,7 @@ class InlineSystemInfoMod(loader.Module):
         string += f"⦁ <b>Count</b>: {self.cpu_count_logic} ({self.cpu_count})\n"
         string += (
             f"⦁ <b>Freq</b>: {self.cpu_freq[0]} (max: {self.cpu_freq[2]} / min: {self.cpu_freq[1]})\n"
-            if self.cpu_freq
+            if hasattr(self, "cpu_freq")
             else ""
         )
         string += f"⦁ <b>Flags</b>: {' '.join(self.cpu_info['flags'])}\n"
@@ -198,9 +198,7 @@ class InlineSystemInfoMod(loader.Module):
         return string
 
     def sensors_string(self):
-        string = "🌡  <b>Sensors Info</b>\n"
-        string += "<b>Temperature</b>:\n"
-
+        string = "🌡  <b>Sensors Info</b>\n" + "<b>Temperature</b>:\n"
         if self.sensors_temperatures:
             for sensor_name in self.sensors_temperatures:
                 sensor = self.sensors_temperatures[sensor_name]
@@ -215,8 +213,7 @@ class InlineSystemInfoMod(loader.Module):
                     ]
                     for item in attr[:-1]:
                         string += f"├── {item}: {getattr(sensor_info, item)}\n"
-                    else:
-                        string += f"└── {attr[-1]}: {getattr(sensor_info, attr[-1])}\n"
+                    string += f"└── {attr[-1]}: {getattr(sensor_info, attr[-1])}\n"
                 string += "\n"
 
         if self.sensors_fans:
@@ -234,8 +231,7 @@ class InlineSystemInfoMod(loader.Module):
                     ]
                     for item in attr[:-1]:
                         string += f"├── {item}: {getattr(sensor_info, item)}\n"
-                    else:
-                        string += f"└── {attr[-1]}: {getattr(sensor_info, attr[-1])}\n"
+                    string += f"└── {attr[-1]}: {getattr(sensor_info, attr[-1])}\n"
 
         return string
 
@@ -276,7 +272,12 @@ class InlineSystemInfoMod(loader.Module):
         # CPU stuff
         self.cpu_count_logic = psutil.cpu_count()
         self.cpu_count = psutil.cpu_count(logical=False)
-        self.cpu_freq = psutil.cpu_freq()
+
+        try:
+            self.cpu_freq = psutil.cpu_freq()
+        except FileNotFoundError:
+            pass
+
         self.cpu_info = cpuinfo.get_cpu_info()
 
         # Network
