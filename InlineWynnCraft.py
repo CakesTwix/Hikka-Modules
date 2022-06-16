@@ -12,7 +12,7 @@ __version__ = (1, 2, 0)
 
 # requires: aiohttp timeago
 # meta pic: https://b.thumbs.redditmedia.com/-cDkj6PuQHqdLEhPh1JYsYplTArOOUuBnKs5FC8sgKs.png
-# meta developer: @CakesTwix
+# meta developer: @cakestwix_mods
 # scope: inline
 
 import logging

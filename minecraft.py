@@ -12,7 +12,7 @@ __version__ = (1, 1, 0)
 
 # requires: aiohttp
 # meta pic: https://icons.iconarchive.com/icons/blackvariant/button-ui-requests-2/1024/Minecraft-2-icon.png
-# meta developer: @CakesTwix
+# meta developer: @cakestwix_mods
 
 import logging
 import aiohttp

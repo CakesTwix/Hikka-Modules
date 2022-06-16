@@ -12,7 +12,7 @@ __version__ = (1, 0, 1)
 
 # requires: requests
 # meta pic: https://cdn-icons-png.flaticon.com/512/1005/1005340.png
-# meta developer: @shadow_geektg
+# meta developer: @shadow_geektg, @cakestwix_mods
 # scope: inline
 # scope: hikka_only
 

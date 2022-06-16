@@ -13,7 +13,7 @@
 __version__ = (1, 0, 3)
 
 # meta pic: http://assets.stickpng.com/images/5cb78671a7c7755bf004c14b.png
-# meta developer: @CakesTwix
+# meta developer: @cakestwix_mods
 
 import logging
 from .. import loader, utils

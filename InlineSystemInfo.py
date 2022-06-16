@@ -12,7 +12,7 @@ __version__ = (1, 2, 1)
 
 # requires: psutil py-cpuinfo
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
-# meta developer: @CakesTwix
+# meta developer: @cakestwix_mods
 # scope: inline
 # scope: hikka_min 1.1.2
 

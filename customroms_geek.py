@@ -15,7 +15,7 @@ __version__ = (1, 4, 1)
 # scope: geektg_only
 # scope: geektg_min 3.1.15
 # meta pic: https://styles.redditmedia.com/t5_3htpk/styles/communityIcon_vlbulj1gn8l11.png
-# meta developer: @CakesTwix
+# meta developer: @cakestwix_mods
 
 import asyncio
 import logging

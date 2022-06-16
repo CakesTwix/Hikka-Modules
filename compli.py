@@ -11,7 +11,7 @@
 __version__ = (1, 0, 1)
 
 # meta pic: https://www.freeiconspng.com/uploads/facebook-circle-heart-love-png-4.png
-# meta developer: @CakesTwix
+# meta developer: @cakestwix_mods
 
 import logging
 import asyncio

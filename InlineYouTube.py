@@ -11,7 +11,7 @@
 __version__ = (1, 1, 1)
 
 # meta pic: https://img.icons8.com/fluency/50/000000/youtube.png
-# meta developer: @CakesTwix
+# meta developer: @cakestwix_mods
 # requires: yt_dlp
 # scope: hikka_min 1.1.11
 # scope: hikka_only

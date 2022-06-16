@@ -11,7 +11,7 @@
 __version__ = (1, 0, 0)
 
 # meta pic: https://allvpn.ru/assets/upload/t-200x200-7439447981535195421.png
-# meta developer: @CakesTwix
+# meta developer: @cakestwix_mods
 # requires: httpx bs4
 # scope: inline
 

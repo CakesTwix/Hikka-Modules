@@ -12,7 +12,7 @@ __version__ = (1, 0, 0)
 
 # requires: aiohttp
 # meta pic: https://www.pngall.com/wp-content/uploads/12/Avatar-Transparent.png
-# meta developer: @CakesTwix
+# meta developer: @cakestwix_mods
 
 import logging
 from .. import loader, utils

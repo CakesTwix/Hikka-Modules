@@ -15,7 +15,7 @@ __version__ = (1, 0, 1)
 # scope: geektg_only
 # scope: geektg_min 3.1.15
 # meta pic: https://iconarchive.com/download/i80732/johnathanmac/mavrick/Transmission.ico
-# meta developer: @CakesTwix
+# meta developer: @cakestwix_mods
 
 import logging
 from .. import loader, utils

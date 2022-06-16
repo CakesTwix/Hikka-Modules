@@ -10,15 +10,15 @@
 
 __version__ = (2, 1, 1) # BETA
 
-# requires: aiohttp pydantic
+# requires: httpx pydantic
 # meta pic: https://www.seekpng.com/png/full/824-8246338_yandere-sticker-yandere-simulator-ayano-bloody.png
-# meta developer: @CakesTwix
+# meta developer: @cakestwix_mods
 # scope: inline
 # scope: hikka_only
 # scope: hikka_min 1.1.2
 
 from .. import loader, utils
-import aiohttp
+import httpx
 import asyncio
 import logging
 import ast
@@ -87,10 +87,10 @@ class Moebooru:
     post_url = '/post.json' 
 
     async def getLast(self, params):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(self.get_url + self.post_url + params) as get:
-                result = await get.json()
-                return [MoebooruModel(**item) for item in result]
+        async with httpx.AsyncClient() as client:
+            get = await client.get(self.get_url + self.post_url + params)
+            result = get.json()
+            return [MoebooruModel(**item) for item in result]
 
 class Konachan_Net(Moebooru):
     domain = 'konachan.net'
@@ -109,16 +109,16 @@ class Booru:
     post_url = '/posts.json'
 
     async def getLast(self, params):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(self.get_url + self.post_url + params) as get:
-                result = await get.json()
-                list_art = []
-                for item in result:
-                    try:
-                        list_art.append(BooruModel(**item))
-                    except Exception as err:
-                        logger.debug(str(err)) # Fck Booru
-                return list_art
+        async with httpx.AsyncClient() as client:
+            get = await client.get(self.get_url + self.post_url + params)
+            result = get.json()
+            list_art = []
+            for item in result:
+                try:
+                    list_art.append(BooruModel(**item))
+                except Exception as err:
+                    logger.debug(str(err)) # Fck Booru
+            return list_art
 
 @loader.tds
 class ImageBoardSenderMod(loader.Module):
@@ -127,7 +127,7 @@ class ImageBoardSenderMod(loader.Module):
     strings = {
         "cfg_channel": "Сhannel variable where the content will be posted",
         "cfg_tags": "Filtering art by tags",
-        "name": "👦 ImageBoardSender",
+        "name": "ImageBoardSender",
         "no_chennel": "Channel does not exist",
         "ok": "Everything is okay",
         "no_ok": "Everything not okay (maybe not admin rights)",
@@ -287,11 +287,6 @@ class ImageBoardSenderMod(loader.Module):
             return
 
         self.entity = await self._client.get_entity(self.config["CONFIG_CHANNEL"])
-        params = (
-            "?tags="
-            + rating_string(self._db.get(self.strings["name"], "rating"))
-            + self.config["CONFIG_TAGS"]
-        )
 
         try:
             channel_bot = await self._client.edit_admin(self.config["CONFIG_CHANNEL"],
@@ -305,17 +300,13 @@ class ImageBoardSenderMod(loader.Module):
                 pin_messages=True,
                 add_admins=False,)
             logger.debug(f"[{self.strings['name']}] Bot added")
+
+            if self._db.get(self.strings["name"], "autostart"):
+                self.loop__send_arts.start()
         except ValueError:
             channel_bot = None
             logger.warning(f"[{self.strings['name']}] Check channel username")
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(self.url + params) as get:
-                art_data = await get.json()
-                self.last_id = art_data[0]["id"]
-
-                if self._db.get(self.strings["name"], "autostart"):
-                    self.loop__send_arts.start()
 
     async def client_ready(self, client, db) -> None:
         self._db = db

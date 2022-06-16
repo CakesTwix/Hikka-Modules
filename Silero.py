@@ -12,7 +12,7 @@ __version__ = (1, 1, 0)
 
 # requires: torch
 # meta pic: https://cdn.pixabay.com/photo/2017/07/09/20/48/speaker-2488096_1280.png
-# meta developer: @CakesTwix
+# meta developer: @cakestwix_mods
 # scope: hikka_only
 
 import os

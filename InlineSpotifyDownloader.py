@@ -12,7 +12,7 @@ __version__ = (1, 0, 0)
 
 # requires: spotdl
 # meta pic: https://cdn-icons-png.flaticon.com/512/2111/2111624.png
-# meta developer: @CakesTwix
+# meta developer: @cakestwix_mods
 # scope: hikka_only
 
 import os
