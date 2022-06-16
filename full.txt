@@ -6,8 +6,8 @@ FoxAndDogsGallery
 ImageBoardSender
 linux_packages
 minecraft
-nhentai_geek
-nhentai
+hentai
+hentai_ftg
 qrcode
 random_tools
 tikcock
@@ -21,3 +21,4 @@ InlineSystemInfo
 InlineYouTube
 RandomPeople
 InlineSpotifyDownloader
+flibusta
