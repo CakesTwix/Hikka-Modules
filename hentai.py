@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (2, 0, 0)
+__version__ = (2, 0, 1)
 
 # meta pic: https://seeklogo.com/images/H/hentai-haven-logo-B9D8C4B3B8-seeklogo.com.png
 # meta developer: @cakestwix_mods
@@ -64,11 +64,13 @@ class NHentaiMod(loader.Module):
     async def nhrandomcmd(self, message):
         """🎲 Random hentai doujin"""
         hentai = await self.nhentai_async.get_random()
+        await message.delete()
         await message.client.send_file(message.chat_id, hentai.cover.src, caption=StringBuilder(hentai))
 
     async def nhlastcmd(self, message):
         """⌚️ Latest hentai doujin"""
         hentai = await self.nhentai_async.get_doujin((await self.nhentai_async.get_pages(page=1)).doujins[0].id)
+        await message.delete()
         await message.client.send_file(message.chat_id, hentai.cover.src, caption=StringBuilder(hentai))
 
     async def nhidcmd(self, message):
