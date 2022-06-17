@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 2, 1)
+__version__ = (1, 3, 0)
 
 # requires: psutil py-cpuinfo
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
@@ -105,36 +105,87 @@ class InlineSystemInfoMod(loader.Module):
     def menu_keyboard(self) -> list:
         keyboard = [
             [
-                {"text": "🧠 CPU", "callback": self.change_stuff, "args": ("CPU",)},
-                {"text": "🐧 Linux", "callback": self.change_stuff, "args": ("Linux",)},
                 {
-                    "text": "🗄 Memory",
+                    "text": "😼 General",
                     "callback": self.change_stuff,
-                    "args": ("Memory",),
-                },
+                    "args": ("General",),
+                }
             ],
-            [
-                {
-                    "text": "🌐 Network Address",
-                    "callback": self.change_stuff,
-                    "args": ("Network Address",),
-                },
-                {
-                    "text": "🌐 Network Stats",
-                    "callback": self.change_stuff,
-                    "args": ("Network Stats",),
-                },
-            ],
-            [
-                {"text": "💽 Disk", "callback": self.change_stuff, "args": ("Disk",)},
-            ],
-            [{"text": "🚫 Close", "callback": self.inline__close}]
         ]
 
-        if self.sensors_temperatures or self.sensors_fans:
-            keyboard[2].append({"text": "🌡 Sensors", "callback": self.change_stuff, "args": ("Sensors",)})
+        keyboard.extend(
+            iter(
+                chunks(
+                    [
+                        {
+                            "text": "🧠 CPU",
+                            "callback": self.change_stuff,
+                            "args": ("CPU",),
+                        },
+                        {
+                            "text": "🐧 Linux",
+                            "callback": self.change_stuff,
+                            "args": ("Linux",),
+                        },
+                        {
+                            "text": "🗄 Memory",
+                            "callback": self.change_stuff,
+                            "args": ("Memory",),
+                        },
+                        {
+                            "text": "🌐 Network Address",
+                            "callback": self.change_stuff,
+                            "args": ("Network Address",),
+                        },
+                        {
+                            "text": "🌐 Network Stats",
+                            "callback": self.change_stuff,
+                            "args": ("Network Stats",),
+                        },
+                        {
+                            "text": "💽 Disk",
+                            "callback": self.change_stuff,
+                            "args": ("Disk",),
+                        },
+                        {
+                            "text": "🌡 Sensors",
+                            "callback": self.change_stuff,
+                            "args": ("Sensors",),
+                        }
+                    ],
+                    3,
+                )
+            )
+        )
 
-        return keyboard
+        keyboard.append([{"text": "🚫 Close", "callback": self.inline__close}])
+        try:
+            return keyboard[3].remove([])
+        except ValueError:
+            return keyboard
+
+    def general_info(self):
+        string = "😼 <b>System Info</b>\n"
+        string += f"  ├──<b>CPU Name</b>: <code>{self.cpu_info.get('brand_raw', 'Undetermined.')}</code> {self.cpu_count_logic}/{self.cpu_count} ({self.cpu_info['arch_string_raw']})\n"
+        string += f"  ├──<b>RAM</b>: {progressbar(self.virtual_memory.percent, 10)} <code>({bytes2human(self.virtual_memory.used)}/{bytes2human(self.virtual_memory.total)})</code>\n"
+        string += f"  └──<b>Swap</b>: {progressbar(self.swap_memory.percent, 10)} <code>({bytes2human(self.swap_memory.used)}/{bytes2human(self.swap_memory.total)})</code>\n\n"
+
+        string += "🐧 <b>Linux Info</b>\n"
+        string += f"  ├──<b>Name</b>: <code>{get_distro()}</code>\n"
+        string += f"  └──<b>Kernel</b>: <code>{platform.release()}</code>\n\n"
+
+        disk_root = psutil.disk_partitions("/")[0]
+        disk_usage = psutil.disk_usage(disk_root.mountpoint)
+
+        string += "💽 <b>Disk Info</b> <code>(/)</code>\n"
+        string += f"  └──<b>{disk_root.device}</b>\n"
+        string += f"        ├── <b>Mount</b> {disk_root.mountpoint}\n"
+        string += f"        ├── <b>FS</b> {disk_root.fstype}\n"
+        string += f"        ├── <b>Disk Usage</b> {disk_usage.percent}% ({bytes2human(disk_usage.used)}/{bytes2human(disk_usage.total)})\n"
+        string += f"        │       └──{progressbar(disk_usage.percent, 10)}\n"
+        string += f"        └── <b>Options</b> {disk_root.opts}\n\n"
+
+        return string
 
     def cpu_string(self):
         string = "🧠  <b>CPU Info</b>\n"
@@ -198,8 +249,9 @@ class InlineSystemInfoMod(loader.Module):
         return string
 
     def sensors_string(self):
-        string = "🌡  <b>Sensors Info</b>\n" + "<b>Temperature</b>:\n"
+        string = None
         if self.sensors_temperatures:
+            string = "🌡  <b>Sensors Info</b>\n" + "<b>Temperature</b>:\n"
             for sensor_name in self.sensors_temperatures:
                 sensor = self.sensors_temperatures[sensor_name]
                 string += f"<b>{sensor_name}</b>\n"
@@ -249,7 +301,7 @@ class InlineSystemInfoMod(loader.Module):
         os_release = get_os_release()
 
         string = f"""🐧  <b>Linux Info</b>
-        Name: {get_distro() if get_distro() else "Termux"}
+        Name: {get_distro()}
         Kernel: {platform.release()}
         Hostname: {platform.node()}
         {f'glibc ver: {platform.glibc()[1]}' if hasattr(platform, 'glibc') else ''}
@@ -283,7 +335,7 @@ class InlineSystemInfoMod(loader.Module):
         # Network
         self.net_if_addrs = psutil.net_if_addrs()
         self.net_if_stats = psutil.net_if_stats()
-    
+
     def update_data(self):
         # Memory
         self.virtual_memory = psutil.virtual_memory()
@@ -310,6 +362,7 @@ class InlineSystemInfoMod(loader.Module):
 
         # Generate string
         self.info_string = {
+            "General": self.general_info(),
             "CPU": self.cpu_string(),
             "Disk": self.disks_string(),
             "Network Address": self.network_addr_string(),
@@ -318,9 +371,14 @@ class InlineSystemInfoMod(loader.Module):
             "Sensors": self.sensors_string(),
             "Linux": self.linux_string(),
         }
-    
+
     async def client_ready(self, client, db) -> None:
-        if hasattr(self, "hikka") and utils.get_named_platform() == "🕶 Termux" or not hasattr(self, "hikka") and utils.get_platform_name() == "📱 Termux":
+        if (
+            hasattr(self, "hikka")
+            and utils.get_named_platform() == "🕶 Termux"
+            or not hasattr(self, "hikka")
+            and utils.get_platform_name() == "📱 Termux"
+        ):
             raise loader.LoadError("Termux is not supported")
 
     async def systeminfocmd(self, message):
@@ -328,7 +386,7 @@ class InlineSystemInfoMod(loader.Module):
         await utils.run_sync(self.update_data)
 
         await self.inline.form(
-            text=self.cpu_string(),
+            text=self.general_info(),
             message=message,
             reply_markup=self.menu_keyboard(),
         )
@@ -336,7 +394,10 @@ class InlineSystemInfoMod(loader.Module):
     # Inline callback
 
     async def change_stuff(self, call, stuff):
-        await call.edit(text=self.info_string[stuff], reply_markup=self.menu_keyboard())
+        if self.info_string[stuff] != None:
+            await call.edit(text=self.info_string[stuff], reply_markup=self.menu_keyboard())
+        else:
+            await call.answer("No data :(")
 
     async def inline__close(self, call) -> None:
         await call.delete()
