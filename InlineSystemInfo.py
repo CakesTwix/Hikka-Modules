@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 4, 0)
+__version__ = (1, 4, 1)
 
 # requires: psutil py-cpuinfo
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
@@ -184,18 +184,19 @@ class InlineSystemInfoMod(loader.Module):
         string += f"  ├──<b>Name</b>: <code>{get_distro()}</code>\n"
         string += f"  └──<b>Kernel</b>: <code>{platform.release()}</code>\n\n"
 
-        disk_root = psutil.disk_partitions("/")[0]
-        disk_usage = psutil.disk_usage(disk_root.mountpoint)
+        for disk_root in psutil.disk_partitions("/"):
+            if disk_root.mountpoint == '/':
+                disk_usage = psutil.disk_usage(disk_root.mountpoint)
 
-        string += "💽 <b>Disk Info</b> <code>(/)</code>\n"
-        string += f"  └──<b>{disk_root.device}</b>\n"
-        string += f"        ├── <b>Mount</b> {disk_root.mountpoint}\n"
-        string += f"        ├── <b>FS</b> {disk_root.fstype}\n"
-        string += f"        ├── <b>Disk Usage</b> {disk_usage.percent}% ({bytes2human(disk_usage.used)}/{bytes2human(disk_usage.total)})\n"
-        string += f"        │       └──{progressbar(disk_usage.percent, 10)}\n"
-        string += f"        └── <b>Options</b> {disk_root.opts}\n\n"
+                string += "💽 <b>Disk Info</b> <code>(/)</code>\n"
+                string += f"  └──<b>{disk_root.device}</b>\n"
+                string += f"        ├── <b>Mount</b> {disk_root.mountpoint}\n"
+                string += f"        ├── <b>FS</b> {disk_root.fstype}\n"
+                string += f"        ├── <b>Disk Usage</b> {disk_usage.percent}% ({bytes2human(disk_usage.used)}/{bytes2human(disk_usage.total)})\n"
+                string += f"        │       └──{progressbar(disk_usage.percent, 10)}\n"
+                string += f"        └── <b>Options</b> {disk_root.opts}\n\n"
 
-        return string
+                return string
 
     def cpu_string(self):
         string = "🧠  <b>CPU Info</b>\n"
@@ -395,15 +396,6 @@ class InlineSystemInfoMod(loader.Module):
             "Linux": self.linux_string(),
             "Python": self.python_string(),
         }
-
-    async def client_ready(self, client, db) -> None:
-        if (
-            hasattr(self, "hikka")
-            and utils.get_named_platform() == "🕶 Termux"
-            or not hasattr(self, "hikka")
-            and utils.get_platform_name() == "📱 Termux"
-        ):
-            raise loader.LoadError("Termux is not supported")
 
     async def systeminfocmd(self, message):
         """Get information about your server"""
