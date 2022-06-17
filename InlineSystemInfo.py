@@ -320,12 +320,8 @@ class InlineSystemInfoMod(loader.Module):
         }
     
     async def client_ready(self, client, db) -> None:
-        if hasattr(self, "hikka"):
-            if utils.get_named_platform() == "🕶 Termux":
-                raise loader.LoadError("Termux is not supported")
-        else:
-            if utils.get_platform_name() == "📱 Termux":
-                raise loader.LoadError("Termux is not supported")
+        if hasattr(self, "hikka") and utils.get_named_platform() == "🕶 Termux" or not hasattr(self, "hikka") and utils.get_platform_name() == "📱 Termux":
+            raise loader.LoadError("Termux is not supported")
 
     async def systeminfocmd(self, message):
         """Get information about your server"""
