@@ -8,13 +8,18 @@
 
 """
 
-__version__ = (1, 3, 0)
+__version__ = (1, 4, 0)
 
 # requires: psutil py-cpuinfo
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
 # meta developer: @cakestwix_mods
 # scope: inline
 # scope: hikka_min 1.1.2
+
+# For version info 
+import telethon
+import aiogram
+import git
 
 import datetime
 import logging
@@ -90,10 +95,10 @@ def bytes2human(n):
 
 @loader.tds
 class InlineSystemInfoMod(loader.Module):
-    """Get detailed information about your server"""
+    """🖥 Get detailed information about your server"""
 
     strings = {
-        "name": "InlineSystemInfo",
+        "name": "🖥 InlineSystemInfo",
     }
 
     AddressFamily = {
@@ -151,6 +156,11 @@ class InlineSystemInfoMod(loader.Module):
                             "text": "🌡 Sensors",
                             "callback": self.change_stuff,
                             "args": ("Sensors",),
+                        },
+                        {
+                            "text": "🐍 Python",
+                            "callback": self.change_stuff,
+                            "args": ("Python",),
                         }
                     ],
                     3,
@@ -319,6 +329,19 @@ class InlineSystemInfoMod(loader.Module):
             """
 
         return remove_empty_lines(string)
+    
+    def python_string(self):
+        string = "🐍 <b>Python Info</b>\n"
+        string += f"  ├──<b>Version</b>: <code>{platform.python_version()}</code>\n"
+        string += f"  ├──<b>Version (More details)</b>: <code>{cpuinfo.get_cpu_info()['python_version']}</code>\n"
+        string += f"  └──<b>Python Packages version</b>\n"
+        string += f"         ├──<b>Telethon</b>: <code>{telethon.__version__}</code>\n"
+        string += f"         ├──<b>AIOgram</b>: <code>{aiogram.__version__}</code>\n"
+        string += f"         ├──<b>Cpuinfo</b>: <code>{cpuinfo.get_cpu_info()['cpuinfo_version_string']}</code>\n"
+        string += f"         ├──<b>psutil</b>: <code>{psutil.__version__}</code>\n"
+        string += f"         └──<b>git</b>: <code>{git.__version__}</code>\n"
+
+        return string
 
     def __init__(self):
         # CPU stuff
@@ -370,6 +393,7 @@ class InlineSystemInfoMod(loader.Module):
             "Memory": self.memory_string(),
             "Sensors": self.sensors_string(),
             "Linux": self.linux_string(),
+            "Python": self.python_string(),
         }
 
     async def client_ready(self, client, db) -> None:
