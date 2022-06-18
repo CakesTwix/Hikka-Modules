@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 4, 1)
+__version__ = (1, 4, 2)
 
 # requires: psutil py-cpuinfo
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
@@ -207,7 +207,7 @@ class InlineSystemInfoMod(loader.Module):
             if hasattr(self, "cpu_freq")
             else ""
         )
-        string += f"⦁ <b>Flags</b>: {' '.join(self.cpu_info['flags'])}\n"
+        string += f"⦁ <b>Flags</b>: {' '.join(self.cpu_info.get('flags', 'No flags'))}\n"
         string += (
             f"⦁ <b>Load avg</b>: {self.loadavg[0]} {self.loadavg[1]} {self.loadavg[2]}\n"
             if hasattr(self, "loadavg")
@@ -261,7 +261,7 @@ class InlineSystemInfoMod(loader.Module):
 
     def sensors_string(self):
         string = None
-        if self.sensors_temperatures:
+        if hasattr(self, "sensors_temperatures"):
             string = "🌡  <b>Sensors Info</b>\n" + "<b>Temperature</b>:\n"
             for sensor_name in self.sensors_temperatures:
                 sensor = self.sensors_temperatures[sensor_name]
@@ -279,7 +279,7 @@ class InlineSystemInfoMod(loader.Module):
                     string += f"└── {attr[-1]}: {getattr(sensor_info, attr[-1])}\n"
                 string += "\n"
 
-        if self.sensors_fans:
+        if hasattr(self, "sensors_fans"):
             string += "<b>Fans</b>:"
             for sensor_name in self.sensors_fans:
                 sensor = self.sensors_fans[sensor_name]
@@ -366,8 +366,11 @@ class InlineSystemInfoMod(loader.Module):
         self.swap_memory = psutil.swap_memory()
 
         # Sensors
-        self.sensors_temperatures = psutil.sensors_temperatures()
-        self.sensors_fans = psutil.sensors_fans()
+        if hasattr(psutil, "sensors_temperatures"):
+            self.sensors_temperatures = psutil.sensors_temperatures()
+        if hasattr(psutil, "sensors_fans"):
+            self.sensors_fans = psutil.sensors_fans()
+        
         # self.sensors_battery = psutil.sensors_battery()
 
         # CPU stuff
