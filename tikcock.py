@@ -6,65 +6,66 @@
     Copyleft 2022 t.me/CakesTwix
     This program is free software; you can redistribute it and/or modify
 
-    Source - https://github.com/sm1ke000FriendlyTelegram/Friendly-Telegram/raw/main/TikTokMOD.py
-
 """
 
-__version__ = (1, 0, 3)
+__version__ = (2, 0, 0)
 
 # meta pic: http://assets.stickpng.com/images/5cb78671a7c7755bf004c14b.png
 # meta developer: @cakestwix_mods
+# scope: hikka_only
+# requires: httpx
 
 import logging
-from .. import loader, utils
+import re
+
+import httpx
+from aiogram.utils.markdown import hlink
 from telethon.errors.rpcerrorlist import BotResponseTimeoutError
+
+from .. import loader, utils
 
 logger = logging.getLogger(__name__)
 
 
 @loader.tds
 class TikTokMod(loader.Module):
-    """Download tt video via @tikdobot"""
+    """Yet Another TikTok Downloader"""
 
     strings = {
-        "name": "TikTokDownloader",
+        "name": "YATikTok-DL",
         "no_args": "🚫 Not found args, pls check help",
-        "timeout_error": "🚫 The bot didn't send anything((",
+        "no_item": "Couldn't find it("
     }
 
     strings_ru = {
+        "name": "YATikTok-DL",
         "no_args": "🚫 Аргументы не найдены, пожалуйста, проверьте справку",
-        "timeout_error": "🚫 Бот ничего не прислал((",
+        "no_item": "Не нашел(("
     }
 
-    @loader.unrestricted
-    @loader.ratelimit
-    async def dttnwcmd(self, message):
-        """Get tt video without watermark"""
+    async def client_ready(self, client, db) -> None:
+        self._db = db
+        self._client = client
+
+    async def ttdlcmd(self, message):
+        """Download video/music from tiktok"""
         args = utils.get_args_raw(message)
         if not args:
             return await utils.answer(message, self.strings["no_args"])
+        elif "www.tiktok.com" in args or "vm.tiktok.com" in args:
+            async with httpx.AsyncClient() as client:
+                if tik_info := re.findall(r'\/.*\/([\d]*)?', (await client.head(args)).headers["Location"]):
+                    tik_get = (await client.get("http://api.tiktokv.com/aweme/v1/multi/aweme/detail/?aweme_ids=[" + tik_info[0])).json()
+                    await self.inline.form(
+                        message=message,
+                        text=hlink(tik_get["aweme_details"][0]["share_info"]["share_title"], tik_get["aweme_details"][0]["share_info"]["share_url"]),
+                        reply_markup=[[{"text":"Without watermark", "callback": self.download__callback, "args": (tik_get["aweme_details"][0]["video"]["play_addr"]["url_list"][0], message.to_id)}, {"text":"With watermark", "callback": self.download__callback, "args": (tik_get["aweme_details"][0]["video"]["download_addr"]["url_list"][0], message.to_id)}], [{"text":"Audio", "callback": self.download__callback, "args": (tik_get["aweme_details"][0]["music"]["play_url"]["url_list"][0], message.to_id)}]],
+                        photo=tik_get["aweme_details"][0]["video"]["origin_cover"]["url_list"][0]
+                    )
+                else:
+                    await utils.answer(message, "")
+                
 
-        try:
-            r = await message.client.inline_query("tikdobot", args)
-        except BotResponseTimeoutError:
-            return await utils.answer(message, self.strings["timeout_error"])
-
-        await message.client.send_file(message.to_id, r[1].result.content.url)
-        await message.delete()
-
-    @loader.unrestricted
-    @loader.ratelimit
-    async def dttcmd(self, message):
-        """Get tt video with watermark"""
-        args = utils.get_args_raw(message)
-        if not args:
-            return await utils.answer(message, self.strings["no_args"])
-
-        try:
-            r = await message.client.inline_query("tikdobot", args)
-        except BotResponseTimeoutError:
-            return await utils.answer(message, self.strings["timeout_error"])
-
-        await message.client.send_file(message.to_id, r[0].result.content.url)
-        await message.delete()
+    async def download__callback(self, call, url, id_):
+        await self._client.send_file(id_, url)
+        await call.delete()
