@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (2, 0, 0)
+__version__ = (2, 0, 1)
 
 # meta pic: http://assets.stickpng.com/images/5cb78671a7c7755bf004c14b.png
 # meta developer: @cakestwix_mods
@@ -52,10 +52,12 @@ class TikTokMod(loader.Module):
         args = utils.get_args_raw(message)
         if not args:
             return await utils.answer(message, self.strings["no_args"])
+
         elif "www.tiktok.com" in args or "vm.tiktok.com" in args:
             async with httpx.AsyncClient() as client:
-                if tik_info := re.findall(r'\/.*\/([\d]*)?', (await client.head(args)).headers["Location"]):
+                if tik_info := re.findall(r'\/.*\/([\d]*)?', (await client.head(args)).headers["Location"] if "vm.tiktok.com" in args else args):
                     tik_get = (await client.get("http://api.tiktokv.com/aweme/v1/multi/aweme/detail/?aweme_ids=[" + tik_info[0])).json()
+                    logger.debug(tik_get)
                     await self.inline.form(
                         message=message,
                         text=hlink(tik_get["aweme_details"][0]["share_info"]["share_title"], tik_get["aweme_details"][0]["share_info"]["share_url"]),
