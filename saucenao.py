@@ -44,7 +44,7 @@ class SauceNaoMod(loader.Module):
     """🔎 SauceNao - image source locator"""
 
     strings = {
-        "name": "🔎 SauceNao",
+        "name": "SauceNao",
         "cfg_api_key": "https://saucenao.com/user.php?page=search-api",
         "no_args_reply": "🚫 Not found args or reply, pls check help",
         "wrong_url": "🚫 <b>Wrong Url</b>",

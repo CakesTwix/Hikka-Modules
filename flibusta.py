@@ -70,7 +70,7 @@ class FlibustaMod(loader.Module):
     """Get books from flibusta"""
 
     strings = {
-        "name": "📚 Flibusta",
+        "name": "Flibusta",
         "no_args": "🎞 <b>You need to specify book name</b>",
         "no_book": "🎞 <b>No books by your query :(</b>",
     }

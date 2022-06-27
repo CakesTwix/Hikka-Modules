@@ -17,7 +17,7 @@ __version__ = (2, 0, 1)
 import logging
 from typing import Union
 
-from NHentai import NHentaiAsync
+from NHentai import NHentaiAsync, CloudFlareSettings
 
 from .. import loader, utils
 from ..inline import GeekInlineQuery, rand
@@ -47,7 +47,7 @@ class NHentaiMod(loader.Module):
     """🍓 Hentai doujin module 18+"""
 
     strings = {
-        "name": "🍓 NHentai",
+        "name": "NHentai",
         "no_tags": "🎞 <b>No hentai by your query :(</b>",
         "no_digit": "1️⃣ <b>Please give me a number.</b>",
     }
@@ -59,7 +59,18 @@ class NHentaiMod(loader.Module):
     }
 
     def __init__(self):
-        self.nhentai_async = NHentaiAsync()
+        self.config = loader.ModuleConfig(
+            "CONFIG_CSRFTOKEN",
+            "",
+            lambda: self.strings("cfg_csrftoken"),
+            "CONFIG_CF_CLEARANCE",
+            "",
+            lambda: self.strings("cfg_cf_clearance"),
+        )
+
+    async def client_ready(self, client, db) -> None:
+        self.nhentai_async = NHentaiAsync(request_settings=CloudFlareSettings(csrftoken=self.config["CONFIG_CSRFTOKEN"],
+                                                                              cf_clearance=self.config["CONFIG_CF_CLEARANCE"]))
 
     async def nhrandomcmd(self, message):
         """🎲 Random hentai doujin"""
@@ -69,7 +80,7 @@ class NHentaiMod(loader.Module):
 
     async def nhlastcmd(self, message):
         """⌚️ Latest hentai doujin"""
-        hentai = await self.nhentai_async.get_doujin((await self.nhentai_async.get_pages(page=1)).doujins[0].id)
+        hentai = await self.nhentai_async.get_doujin((await self.nhentai_async.get_page(page=1)).doujins[0].id)
         await message.delete()
         await message.client.send_file(message.chat_id, hentai.cover.src, caption=StringBuilder(hentai))
 
@@ -81,7 +92,6 @@ class NHentaiMod(loader.Module):
 
             hentai = await self.nhentai_async.get_doujin(args)
             await message.client.send_file(message.chat_id, hentai.cover.src, caption=StringBuilder(hentai))
-
 
     async def nhsearchcmd(self, message):
         """🔎 Search hentai doujin"""
