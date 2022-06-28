@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 4, 2)
+__version__ = (1, 4, 3)
 
 # requires: psutil py-cpuinfo
 # meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
@@ -184,19 +184,20 @@ class InlineSystemInfoMod(loader.Module):
         string += f"  ├──<b>Name</b>: <code>{get_distro()}</code>\n"
         string += f"  └──<b>Kernel</b>: <code>{platform.release()}</code>\n\n"
 
-        for disk_root in psutil.disk_partitions("/"):
-            if disk_root.mountpoint == '/':
-                disk_usage = psutil.disk_usage(disk_root.mountpoint)
+        if hasattr(self, "disk_partitions"):
+            for disk_root in psutil.disk_partitions("/"):
+                if disk_root.mountpoint == '/':
+                    disk_usage = psutil.disk_usage(disk_root.mountpoint)
 
-                string += "💽 <b>Disk Info</b> <code>(/)</code>\n"
-                string += f"  └──<b>{disk_root.device}</b>\n"
-                string += f"        ├── <b>Mount</b> {disk_root.mountpoint}\n"
-                string += f"        ├── <b>FS</b> {disk_root.fstype}\n"
-                string += f"        ├── <b>Disk Usage</b> {disk_usage.percent}% ({bytes2human(disk_usage.used)}/{bytes2human(disk_usage.total)})\n"
-                string += f"        │       └──{progressbar(disk_usage.percent, 10)}\n"
-                string += f"        └── <b>Options</b> {disk_root.opts}\n\n"
+                    string += "💽 <b>Disk Info</b> <code>(/)</code>\n"
+                    string += f"  └──<b>{disk_root.device}</b>\n"
+                    string += f"        ├── <b>Mount</b> {disk_root.mountpoint}\n"
+                    string += f"        ├── <b>FS</b> {disk_root.fstype}\n"
+                    string += f"        ├── <b>Disk Usage</b> {disk_usage.percent}% ({bytes2human(disk_usage.used)}/{bytes2human(disk_usage.total)})\n"
+                    string += f"        │       └──{progressbar(disk_usage.percent, 10)}\n"
+                    string += f"        └── <b>Options</b> {disk_root.opts}\n\n"
 
-                return string
+        return string
 
     def cpu_string(self):
         string = "🧠  <b>CPU Info</b>\n"
@@ -217,6 +218,9 @@ class InlineSystemInfoMod(loader.Module):
         return string
 
     def disks_string(self):
+        if not hasattr(self, "disk_partitions"):
+            return None
+
         string = "💽  <b>Disk Info</b>\n"
         for disk in self.disk_partitions:
             disk_usage = psutil.disk_usage(disk.mountpoint)
@@ -231,6 +235,9 @@ class InlineSystemInfoMod(loader.Module):
         return string
 
     def network_addr_string(self):
+        if not hasattr(self, "net_if_addrs"):
+            return None
+
         string = "🌐  <b>Network Info</b>\n"
         string += "<b>Address</b>:\n"
         for interf in self.net_if_addrs:
@@ -299,8 +306,10 @@ class InlineSystemInfoMod(loader.Module):
         return string
 
     def network_stats_string(self):
-        string = "🌐  <b>Network Info</b>\n"
-        string += "<b>Stats</b>:\n"
+        if not hasattr(self, "net_if_stats"):
+            return None
+
+        string = "🌐  <b>Network Info</b>\n" + "<b>Stats</b>:\n"
         for interf in self.net_if_stats:
             interface = self.net_if_stats[interf]
             string += f"<b>{interf}</b>\n"
@@ -325,7 +334,7 @@ class InlineSystemInfoMod(loader.Module):
         Name: {os_release["NAME"]}
         Version: {os_release.get("VERSION", "Not available")}
         Documentation: {os_release.get("DOCUMENTATION_URL", "Not available")}
-        Support: {os_release["SUPPORT_URL"]}
+        Support: {os_release.get("SUPPORT_URL", "Not available")}
         Bug Report: {os_release["BUG_REPORT_URL"]}
             """
 
@@ -357,8 +366,11 @@ class InlineSystemInfoMod(loader.Module):
         self.cpu_info = cpuinfo.get_cpu_info()
 
         # Network
-        self.net_if_addrs = psutil.net_if_addrs()
-        self.net_if_stats = psutil.net_if_stats()
+        try:
+            self.net_if_addrs = psutil.net_if_addrs()
+            self.net_if_stats = psutil.net_if_stats()
+        except PermissionError:
+            pass
 
     def update_data(self):
         # Memory
@@ -380,7 +392,10 @@ class InlineSystemInfoMod(loader.Module):
         self.loadavg = psutil.getloadavg()
 
         # Disks
-        self.disk_partitions = psutil.disk_partitions()
+        try:
+            self.disk_partitions = psutil.disk_partitions()
+        except PermissionError:
+            pass
 
         # Other
         self.boot_time = datetime.datetime.fromtimestamp(psutil.boot_time()).strftime(
