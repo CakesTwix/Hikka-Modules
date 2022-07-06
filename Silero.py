@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 1, 0)
+__version__ = (1, 1, 1)
 
 # requires: torch
 # meta pic: https://cdn.pixabay.com/photo/2017/07/09/20/48/speaker-2488096_1280.png
@@ -83,7 +83,7 @@ class SileroMod(loader.Module):
             
             await self._client.send_file(
                 message.chat.id,
-                await self.fast_upload(audio_file, filename="audio.mp3"),
+                audio_file,
                 voice_note=self.config["CONFIG_AS_AUDIO_NOTE"],
                 reply_to=await message.get_reply_message()
             )
