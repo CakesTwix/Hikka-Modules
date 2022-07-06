@@ -14,7 +14,7 @@ __version__ = (1, 0, 1)
 # scope: inline
 # scope: geektg_only
 # scope: geektg_min 3.1.15
-# meta pic: https://iconarchive.com/download/i80732/johnathanmac/mavrick/Transmission.ico
+# meta pic: https://img.icons8.com/ios-filled/512/40C057/torrent.png
 # meta developer: @cakestwix_mods
 
 import logging

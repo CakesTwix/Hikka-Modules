@@ -10,7 +10,7 @@
 
 __version__ = (1, 2, 0)
 
-# meta pic: https://img.icons8.com/fluency/50/000000/youtube.png
+# meta pic: https://img.icons8.com/bubbles/512/000000/youtube-play.png
 # meta developer: @cakestwix_mods
 # requires: yt_dlp
 # scope: hikka_min 1.1.11

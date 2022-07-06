@@ -11,7 +11,7 @@
 __version__ = (1, 1, 0)
 
 # requires: aiohttp
-# meta pic: https://netacad.mpei.ru/wp-content/uploads/linux_un.png
+# meta pic: https://img.icons8.com/clouds/512/000000/linux-client.png
 # meta developer: @KiwiNicer
 
 import aiohttp

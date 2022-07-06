@@ -10,7 +10,7 @@
 
 __version__ = (2, 0, 0)
 
-# meta pic: https://icon-library.com/images/google-translate-icon/google-translate-icon-28.jpg
+# meta pic: https://img.icons8.com/color/512/40C057/translate-text.png
 # meta developer: @cakestwix_mods
 # requires: translators
 

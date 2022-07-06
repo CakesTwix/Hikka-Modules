@@ -10,7 +10,7 @@
 
 __version__ = (1, 1, 0)
 
-# meta pic: https://allvpn.ru/assets/upload/t-200x200-7439447981535195421.png
+# meta pic: https://img.icons8.com/external-flaticons-lineal-color-flat-icons/512/000000/external-anime-addiction-flaticons-lineal-color-flat-icons.png
 # meta developer: @cakestwix_mods
 # requires: saucenao_api
 # scope: inline

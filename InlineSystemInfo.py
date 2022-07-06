@@ -11,7 +11,7 @@
 __version__ = (1, 4, 3)
 
 # requires: psutil py-cpuinfo
-# meta pic: https://icon-library.com/images/system-information-icon/system-information-icon-19.jpg
+# meta pic: https://img.icons8.com/external-xnimrodx-lineal-color-xnimrodx/512/000000/external-pc-computer-xnimrodx-lineal-color-xnimrodx.png
 # meta developer: @cakestwix_mods
 # scope: inline
 # scope: hikka_min 1.1.2

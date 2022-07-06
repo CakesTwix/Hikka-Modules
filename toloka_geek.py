@@ -13,7 +13,7 @@ __version__ = (1, 0, 1)
 # scope: inline
 # scope: geektg_only
 # scope: geektg_min 3.1.15
-# meta pic: https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/New_qBittorrent_Logo.svg/768px-New_qBittorrent_Logo.svg.png
+# meta pic: https://img.icons8.com/external-others-iconmarket/512/000000/external-national-flags-others-iconmarket-5.png
 # meta developer: @cakestwix_mods
 
 import asyncio
