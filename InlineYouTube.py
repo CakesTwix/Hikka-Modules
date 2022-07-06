@@ -8,16 +8,17 @@
 
 """
 
-__version__ = (1, 2, 0)
+__version__ = (1, 2, 1)
 
 # meta pic: https://img.icons8.com/bubbles/512/000000/youtube-play.png
 # meta developer: @cakestwix_mods
-# requires: yt_dlp
+# requires: yt_dlp aiohttp
 # scope: hikka_min 1.1.11
 # scope: hikka_only
 
 import asyncio
 import logging
+import aiohttp
 import os
 from yt_dlp.utils import DownloadError
 import yt_dlp
@@ -114,8 +115,7 @@ class YouTubeMod(loader.Module):
         quality: dict,
         info_dict: dict,
         chat_id: int,
-        format_id: int,
-    ):
+        format_id: int):
         string = f"{self.strings['format']} {quality['format']}\n"
         string += f"{self.strings['ext']} {quality['ext']}\n"
         string += f"{self.strings['video_codec']} {quality['vcodec']}\n"
@@ -188,14 +188,19 @@ class YouTubeMod(loader.Module):
             ),
             "rb",
         ) as input_file:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"https://img.youtube.com/vi/{meta['id']}/maxresdefault.jpg") as resp:
+                    with open("yt.jpg", 'wb') as fd:
+                        async for chunk in resp.content.iter_chunked(512):
+                            fd.write(chunk)
+
             content = input_file.read()
             input_file.seek(0)
             await self._client.send_file(
                 chat_id,
-                await self.fast_upload(
-                    input_file, filename=f"video.{ext.replace('webm','mkv')}"
-                ),
+                input_file,
                 supports_streaming=True,
+                thumb="yt.jpg"
             )
             os.remove(
                 "{0}x{1}.{2}.{3}".format(
