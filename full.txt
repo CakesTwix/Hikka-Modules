@@ -22,3 +22,4 @@ InlineYouTube
 RandomPeople
 InlineSpotifyDownloader
 flibusta
+SimpleNoLink
