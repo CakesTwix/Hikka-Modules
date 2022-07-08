@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 2, 1)
+__version__ = (1, 2, 2)
 
 # meta pic: https://img.icons8.com/bubbles/512/000000/youtube-play.png
 # meta developer: @cakestwix_mods
@@ -179,35 +179,31 @@ class YouTubeMod(loader.Module):
         await call.edit(
             text=f"{self.strings['uploading']}",
         )
-        with open(
+
+        # Download thumb for video
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://img.youtube.com/vi/{meta['id']}/maxresdefault.jpg") as resp:
+                with open("yt.jpg", 'wb') as fd:
+                    async for chunk in resp.content.iter_chunked(512):
+                        fd.write(chunk)
+
+        await self._client.send_file(
+            chat_id,
+            "{0}x{1}.{2}.{3}".format(
+            (meta["width"]),
+            (meta["height"]),
+            (meta["id"]),
+            (meta["ext"].replace("webm", "mkv")),
+        ),
+            supports_streaming=True,
+            thumb="yt.jpg"
+        )
+        os.remove(
             "{0}x{1}.{2}.{3}".format(
                 (meta["width"]),
                 (meta["height"]),
                 (meta["id"]),
                 (meta["ext"].replace("webm", "mkv")),
-            ),
-            "rb",
-        ) as input_file:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(f"https://img.youtube.com/vi/{meta['id']}/maxresdefault.jpg") as resp:
-                    with open("yt.jpg", 'wb') as fd:
-                        async for chunk in resp.content.iter_chunked(512):
-                            fd.write(chunk)
-
-            content = input_file.read()
-            input_file.seek(0)
-            await self._client.send_file(
-                chat_id,
-                input_file,
-                supports_streaming=True,
-                thumb="yt.jpg"
             )
-            os.remove(
-                "{0}x{1}.{2}.{3}".format(
-                    (meta["width"]),
-                    (meta["height"]),
-                    (meta["id"]),
-                    (meta["ext"].replace("webm", "mkv")),
-                )
-            )
-            await call.delete()
+        )
+        await call.delete()
