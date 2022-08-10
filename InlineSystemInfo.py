@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 4, 3)
+__version__ = (1, 4, 5)
 
 # requires: psutil py-cpuinfo
 # meta pic: https://img.icons8.com/external-xnimrodx-lineal-color-xnimrodx/512/000000/external-pc-computer-xnimrodx-lineal-color-xnimrodx.png
@@ -104,7 +104,9 @@ class InlineSystemInfoMod(loader.Module):
     AddressFamily = {
         2: "IPv4",
         10: "IPv6",
+        28: "IPv6",
         17: "Link",
+        18: "Link",
     }
 
     def menu_keyboard(self) -> list:
@@ -205,7 +207,7 @@ class InlineSystemInfoMod(loader.Module):
         string += f"⦁ <b>Count</b>: {self.cpu_count_logic} ({self.cpu_count})\n"
         string += (
             f"⦁ <b>Freq</b>: {self.cpu_freq[0]} (max: {self.cpu_freq[2]} / min: {self.cpu_freq[1]})\n"
-            if hasattr(self, "cpu_freq")
+            if hasattr(self, "cpu_freq") and self.cpu_freq
             else ""
         )
         string += f"⦁ <b>Flags</b>: {' '.join(self.cpu_info.get('flags', 'No flags'))}\n"
@@ -414,6 +416,10 @@ class InlineSystemInfoMod(loader.Module):
             "Linux": self.linux_string(),
             "Python": self.python_string(),
         }
+
+    async def client_ready(self, client, db) -> None:
+        if utils.get_platform_name() == '🕶 Termux':
+            raise loader.LoadError("No Termux support. Change your host")
 
     async def systeminfocmd(self, message):
         """Get information about your server"""
