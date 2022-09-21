@@ -8,7 +8,7 @@
 
 """
 
-__version__ = (1, 2, 2)
+__version__ = (1, 2, 3)
 
 # meta pic: https://img.icons8.com/bubbles/512/000000/youtube-play.png
 # meta developer: @cakestwix_mods
@@ -23,6 +23,7 @@ import os
 from yt_dlp.utils import DownloadError
 import yt_dlp
 from telethon.tl.types import Message
+from telethon import functions, types
 
 from .. import loader, utils
 from ..inline.types import InlineCall
@@ -182,8 +183,8 @@ class YouTubeMod(loader.Module):
 
         # Download thumb for video
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"https://img.youtube.com/vi/{meta['id']}/maxresdefault.jpg") as resp:
-                with open("yt.jpg", 'wb') as fd:
+            async with session.get(f"https://img.youtube.com/vi/{meta['id']}/0.jpg") as resp:
+                with open(meta['id'] + ".jpg", 'wb') as fd:
                     async for chunk in resp.content.iter_chunked(512):
                         fd.write(chunk)
 
@@ -196,7 +197,7 @@ class YouTubeMod(loader.Module):
             (meta["ext"].replace("webm", "mkv")),
         ),
             supports_streaming=True,
-            thumb="yt.jpg"
+            thumb=meta["id"] + ".jpg"
         )
         os.remove(
             "{0}x{1}.{2}.{3}".format(
@@ -206,4 +207,5 @@ class YouTubeMod(loader.Module):
                 (meta["ext"].replace("webm", "mkv")),
             )
         )
+        os.remove(meta["id"] + ".jpg")
         await call.delete()
